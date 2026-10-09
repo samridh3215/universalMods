@@ -217,3 +217,5 @@ label.row:has(> span) { align-items: flex-start; }
 
 /* setup screen cards per platform */
 .card.claude { border-top: 3px solid var(--claude); } .card.codex { border-top: 3px solid var(--codex); }
+.kanban-card .row { flex-wrap: wrap; }
+.kanban-card .row select { flex: 1; min-width: 0; }
