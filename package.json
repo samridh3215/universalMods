@@ -1,0 +1,31 @@
+{
+  "name": "universal-mods",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Claude-Code-style mods + a web control floor for Codex or Claude CLI agents",
+  "scripts": {
+    "dev": "tsx src/server/index.ts",
+    "start": "tsx src/server/index.ts",
+    "build": "tsc --noEmit && tsx src/server/build-check.ts",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

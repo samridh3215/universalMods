@@ -1,0 +1,14 @@
+{
+  "name": "universalMods",
+  "short_name": "uMods",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#f0f0ed",
+  "background_color": "#f0f0ed",
+  "display": "standalone"
+}

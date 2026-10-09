@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"],
+    "paths": { "universal-mods": ["./src/web/mod-api.ts"], "universal-mods/server": ["./src/core/types.ts"] }
+  },
+  "include": ["src", "mods", "tests"]
+}

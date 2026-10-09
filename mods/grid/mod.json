@@ -1,0 +1,1 @@
+{ "id": "grid", "name": "Agent grid", "description": "Tiled live agent streams with send/steer/interrupt/hold/stop controls." }

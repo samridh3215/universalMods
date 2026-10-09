@@ -1,0 +1,7 @@
+{
+  "id": "guard-example",
+  "name": "Guard (example)",
+  "description": "Blocks destructive shell commands (rm -rf on / or ~, force pushes) on either platform. Off by default — floors run with no limits.",
+  "enabled": false,
+  "options": { "patterns": ["rm\\s+-[a-z]*r[a-z]*f?\\s+(/|~)(\\s|$)", "git\\s+push\\s+.*--force", "mkfs", ":\\(\\)\\s*\\{"] }
+}

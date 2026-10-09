@@ -1,0 +1,1 @@
+{ "id": "status", "name": "Floor status", "description": "Status line with agent counts and spend; /broadcast command messages every agent." }
