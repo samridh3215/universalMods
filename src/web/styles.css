@@ -114,7 +114,7 @@ h1, h2, h3, h4 { margin: .4em 0; }
 .agent-stream { flex: 1; overflow: auto; padding: 8px; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
 .agent-input { border-top: 1px solid var(--line); padding: 6px; background: var(--bg); }
 .agent-input textarea { font-family: inherit; resize: vertical; min-height: 26px; }
-.kanban { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 8px; overflow-x: auto; padding: 8px; }
+.kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; padding: 8px; }
 .kanban-col { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; min-height: 120px; display: flex; flex-direction: column; gap: 8px; }
 .kanban-card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
 .board { display: flex; flex-direction: column; height: 100%; padding: 8px; }
@@ -122,3 +122,98 @@ h1, h2, h3, h4 { margin: .4em 0; }
 
 ::-webkit-scrollbar-corner { background: transparent; }
 textarea::-webkit-resizer { background: transparent; }
+
+/* ── Colour layer ─────────────────────────────────────────────────────── */
+:root {
+  --violet: #7c5cd6; --teal: #0f9488; --pink: #d6457e; --amber: #c98a12; --sky: #2b8fd9;
+  --claude: #d97757; --codex: #10a37f;
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--panel));
+}
+@media (prefers-color-scheme: dark) {
+  :root { --violet: #a48bf0; --teal: #2dc4b6; --pink: #f07aa8; --amber: #f0b74c; --sky: #5fb2f0; --claude: #e8916f; --codex: #3cc79f; }
+}
+
+/* top bar: thin brand gradient underline */
+.topbar { position: relative; }
+.topbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--violet) 35%, var(--pink) 65%, var(--amber)); opacity: .85; }
+.pill.claude { background: color-mix(in srgb, var(--claude) 16%, var(--panel)); color: var(--claude); border-color: color-mix(in srgb, var(--claude) 40%, transparent); font-weight: 600; }
+.pill.codex { background: color-mix(in srgb, var(--codex) 16%, var(--panel)); color: var(--codex); border-color: color-mix(in srgb, var(--codex) 40%, transparent); font-weight: 600; }
+.dot.on { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+
+/* buttons */
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 85%, #000); border-color: transparent; }
+button.danger-outline { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+button.danger-outline:hover:not(:disabled) { background: color-mix(in srgb, var(--bad) 10%, var(--panel)); border-color: var(--bad); }
+button { transition: background-color .12s, border-color .12s, color .12s; }
+
+/* selects with a chevron */
+select { appearance: none; -webkit-appearance: none; padding-right: 22px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 7px center; }
+.pane-head select { padding-right: 20px; background-position: right 5px center; }
+
+/* checkboxes */
+input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; padding: 0; margin: 1px 0 0;
+  flex: none; border: 1.5px solid color-mix(in srgb, var(--muted) 70%, transparent); border-radius: 4px; background: var(--panel);
+  display: inline-grid; place-content: center; cursor: pointer; vertical-align: -3px; box-shadow: none;
+  transition: background-color .12s, border-color .12s; }
+input[type="checkbox"]::before { content: ""; width: 9px; height: 9px; transform: scale(0); transition: transform .12s ease-out;
+  background: #fff; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+input[type="checkbox"]:checked::before { transform: scale(1); }
+input[type="checkbox"]:hover { border-color: var(--accent); }
+input[type="checkbox"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 2px; }
+
+/* selectable rows (mods list, skills, options) */
+label.row { align-items: center; padding: 6px 8px; margin: 0 -8px; border-radius: 6px; cursor: pointer; transition: background-color .12s; }
+label.row:hover { background: var(--accent-soft); }
+label.row:has(> input:checked) strong { color: var(--accent); }
+label.row:has(> span) { align-items: flex-start; }
+
+/* filter chips (timeline) */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.chip { --c: var(--muted); display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border-radius: 99px; cursor: pointer;
+  font-size: 11.5px; border: 1px solid color-mix(in srgb, var(--c) 35%, var(--line)); color: var(--muted); background: var(--panel); user-select: none; }
+.chip input[type="checkbox"] { width: 13px; height: 13px; border-radius: 99px; border-color: color-mix(in srgb, var(--c) 60%, transparent); }
+.chip input[type="checkbox"]::before { width: 7px; height: 7px; }
+.chip input[type="checkbox"]:checked { background: var(--c); border-color: var(--c); }
+.chip:has(input:checked) { color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--panel)); font-weight: 500; }
+.k-user { --c: var(--accent); } .k-text { --c: var(--teal); } .k-tool { --c: var(--violet); } .k-file { --c: var(--amber); }
+.k-turn { --c: var(--sky); } .k-error { --c: var(--bad); } .k-reasoning { --c: var(--pink); } .k-notice { --c: var(--muted); }
+
+/* event rows: coloured left rail by kind */
+.ev { border-bottom: none; border-left: 2px solid transparent; padding: 3px 0 3px 8px; border-radius: 0 4px 4px 0; }
+.ev-user { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.ev-text { border-left-color: color-mix(in srgb, var(--teal) 70%, transparent); }
+.ev-tool { border-left-color: color-mix(in srgb, var(--violet) 70%, transparent); }
+.ev-tool code { color: var(--violet); font-weight: 600; }
+.ev-tool:hover, .ev-user:hover { background: color-mix(in srgb, var(--violet) 7%, transparent); }
+.ev.bad { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 7%, transparent); }
+
+/* agents: avatar + status stripe */
+.avatar { --h: 210; width: 22px; height: 22px; border-radius: 6px; display: inline-grid; place-items: center; flex: none;
+  font-size: 11px; font-weight: 700; color: #fff; background: hsl(var(--h) 55% 50%); }
+.agent-card { border-top: 3px solid var(--line); transition: border-color .2s; }
+.agent-card[data-status="working"] { border-top-color: var(--accent); }
+.agent-card[data-status="idle"] { border-top-color: var(--ok); }
+.agent-card[data-status="blocked"], .agent-card[data-status="error"] { border-top-color: var(--bad); }
+.agent-card[data-status="held"] { border-top-color: var(--warn); }
+.agent-card[data-status="starting"] { border-top-color: var(--sky); }
+.agent-card[data-status="working"] .status-badge::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; margin-right: 5px; vertical-align: 1px; animation: um-pulse 1.2s ease-in-out infinite; }
+.status-starting { color: var(--sky); border-color: color-mix(in srgb, var(--sky) 30%, transparent); }
+.status-stopped { color: var(--muted); }
+@keyframes um-pulse { 50% { opacity: .25; } }
+
+/* kanban columns */
+.kanban-col { --c: var(--muted); border-top: 3px solid var(--c); }
+.kanban-col[data-col="todo"] { --c: var(--sky); } .kanban-col[data-col="doing"] { --c: var(--violet); }
+.kanban-col[data-col="review"] { --c: var(--amber); } .kanban-col[data-col="done"] { --c: var(--ok); }
+.kanban-col h4 { color: var(--c); text-transform: uppercase; font-size: 11px; letter-spacing: .06em; display: flex; gap: 6px; align-items: center; }
+.kanban-col h4 .muted { background: color-mix(in srgb, var(--c) 15%, var(--panel)); color: var(--c); border-radius: 99px; padding: 0 7px; font-size: 10.5px; }
+.kanban-card { border-left: 3px solid var(--c); }
+
+/* setup screen cards per platform */
+.card.claude { border-top: 3px solid var(--claude); } .card.codex { border-top: 3px solid var(--codex); }

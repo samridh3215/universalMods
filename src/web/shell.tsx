@@ -63,7 +63,7 @@ function TokenPrompt({ message }: { message: string }) {
       </p>
       <div className="row">
         <input autoFocus style={{ flex: 1 }} placeholder="token" value={t} onChange={(e) => setT(e.target.value)} />
-        <button>Connect</button>
+        <button className="primary">Connect</button>
       </div>
     </form>
   );
@@ -94,10 +94,10 @@ function Setup() {
         {(['claude', 'codex'] as const).map((p) => {
           const c = s.checks[p];
           return (
-            <div key={p} className="card">
+            <div key={p} className={`card ${p}`}>
               <h2>{p === 'claude' ? 'Claude Code' : 'Codex'}</h2>
               <p className={c.ok ? 'ok' : 'bad'}>{c.ok ? `found ${c.version ?? ''}` : c.error}</p>
-              <button disabled={busy || !c.ok} onClick={() => pick(p)}>
+              <button className="primary" disabled={busy || !c.ok} onClick={() => pick(p)}>
                 Use {p}
               </button>
             </div>
@@ -171,7 +171,7 @@ function Shell() {
           </span>
         ))}
         {!s.check?.ok && <span className="bad">{s.check?.error}</span>}
-        <button className={s.halted ? 'danger' : ''} onClick={() => floor.halt(!s.halted)}>
+        <button className={s.halted ? 'danger' : 'danger-outline'} onClick={() => floor.halt(!s.halted)}>
           {s.halted ? 'Resume floor' : 'Halt floor'}
         </button>
       </header>

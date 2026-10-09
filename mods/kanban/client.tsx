@@ -30,12 +30,12 @@ function Kanban() {
             </option>
           ))}
         </select>
-        <button>Add</button>
+        <button className="primary">Add</button>
       </form>
       <p className="muted small">Assigning a task messages that agent. Agents move tasks themselves via the hive tools.</p>
       <div className="kanban">
         {COLS.map((col, ci) => (
-          <div key={col} className="kanban-col">
+          <div key={col} className="kanban-col" data-col={col}>
             <h4>
               {col} <span className="muted">{tasks.filter((t) => t.status === col).length}</span>
             </h4>

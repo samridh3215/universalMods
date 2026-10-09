@@ -11,9 +11,9 @@ function Timeline({ params, setParams }: ViewProps) {
   const shown = events.filter((e) => !hidden.includes(e.event.kind) && (!params.agent || e.agentId === params.agent)).slice(-400).reverse();
   return (
     <div className="pad">
-      <div className="row small" style={{ flexWrap: 'wrap' }}>
+      <div className="chips">
         {KINDS.map((k) => (
-          <label key={k}>
+          <label key={k} className={`chip k-${k}`}>
             <input type="checkbox" checked={!hidden.includes(k)} onChange={(e) => setParams({ ...params, hidden: e.target.checked ? hidden.filter((x) => x !== k) : [...hidden, k] })} /> {k}
           </label>
         ))}

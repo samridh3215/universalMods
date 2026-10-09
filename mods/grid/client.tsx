@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { EventLine, StatusBadge, floor, fmtUsage, registerView, useAgentEvents, useFloor, type AgentInfo, type ViewProps } from 'universal-mods';
 
+/** Stable hue per agent name, so each agent keeps its colour. */
+const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+
 function AgentCard({ a }: { a: AgentInfo }) {
   const events = useAgentEvents(a.id, 300);
   const queued = useFloor((s) => s.queued[a.id] ?? 0);
@@ -19,8 +22,11 @@ function AgentCard({ a }: { a: AgentInfo }) {
   };
 
   return (
-    <div className="agent-card">
+    <div className="agent-card" data-status={a.status}>
       <div className="agent-head">
+        <span className="avatar" style={{ '--h': hue(a.name) } as React.CSSProperties}>
+          {a.name.slice(0, 1).toUpperCase()}
+        </span>
         <strong>{a.name}</strong>
         <span className="muted small">{a.role}</span>
         <StatusBadge status={a.status} />
@@ -35,7 +41,7 @@ function AgentCard({ a }: { a: AgentInfo }) {
           Interrupt
         </button>
         <button onClick={() => floor.hold(a.id, !a.held)}>{a.held ? 'Release' : 'Hold'}</button>
-        <button onClick={() => floor.kill(a.id)} disabled={a.status === 'stopped'}>
+        <button className="danger-outline" onClick={() => floor.kill(a.id)} disabled={a.status === 'stopped'}>
           Stop
         </button>
         <button onClick={() => confirm(`Archive ${a.name}?`) && floor.archive(a.id)}>Archive</button>

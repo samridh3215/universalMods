@@ -64,7 +64,7 @@ function Spawner() {
         </details>
       )}
       <textarea rows={3} placeholder="first prompt (optional)" value={f.prompt} onChange={(e) => set('prompt', e.target.value)} />
-      <button disabled={busy}>{busy ? 'spawning…' : 'Spawn'}</button>
+      <button className="primary" disabled={busy}>{busy ? 'spawning…' : 'Spawn'}</button>
       <p className="muted small">Agents run with no permission limits (Claude: bypassPermissions · Codex: danger-full-access + never ask). Guard mods can still block calls.</p>
     </form>
   );
