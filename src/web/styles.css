@@ -101,7 +101,6 @@ h1, h2, h3, h4 { margin: .4em 0; }
 .ev-user { color: var(--accent); font-weight: 500; }
 .ev-out { background: var(--bg); padding: 8px; border-radius: 4px; margin-top: 4px; max-height: 300px; overflow: auto; border: 1px solid var(--line); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.spawner textarea { margin: 8px 0; }
 .skill-list { max-height: 160px; overflow: auto; padding-right: 4px; }
 .grid-view { display: flex; flex-direction: column; height: 100%; }
 .grid-tools { display: flex; gap: 6px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
@@ -219,3 +218,14 @@ label.row:has(> span) { align-items: flex-start; }
 .card.claude { border-top: 3px solid var(--claude); } .card.codex { border-top: 3px solid var(--codex); }
 .kanban-card .row { flex-wrap: wrap; }
 .kanban-card .row select { flex: 1; min-width: 0; }
+
+/* grid: the "+" spawn tile fills the next slot */
+.spawn-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 0; height: 100%;
+  border: 2px dashed color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 6px; background: transparent; cursor: pointer;
+  color: var(--accent); transition: background-color .15s, border-color .15s; }
+.spawn-tile:hover { background: var(--accent-soft); border-color: var(--accent); }
+.spawn-plus { font-size: 44px; font-weight: 300; line-height: 1; }
+.spawn-tile.open { cursor: default; align-items: stretch; justify-content: flex-start; gap: 8px; padding: 10px; overflow: auto;
+  border-style: solid; background: var(--panel); color: var(--text); }
+.spawn-tile.open:hover { background: var(--panel); }
+.spawn-tile.open textarea { resize: vertical; }

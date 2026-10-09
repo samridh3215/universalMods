@@ -1,12 +1,24 @@
+// The "+" tile at the end of the agent grid. Click it to turn the tile into a spawn form.
 import { useState } from 'react';
-import { floor, registerView, useFloor } from 'universal-mods';
+import { floor, useFloor } from 'universal-mods';
 
-function Spawner() {
+const EMPTY = { name: '', role: '', model: '', effort: '', cwd: '', worktree: false, prompt: '', skills: [] as string[] };
+
+export function SpawnTile() {
   const provider = useFloor((s) => s.provider);
   const skills = useFloor((s) => s.skills);
-  const [f, setF] = useState({ name: '', role: '', model: '', effort: '', cwd: '', worktree: false, prompt: '', skills: [] as string[] });
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
   const set = (k: string, v: unknown) => setF({ ...f, [k]: v });
+
+  if (!open)
+    return (
+      <button className="spawn-tile" onClick={() => setOpen(true)} title={`Spawn a ${provider} agent`}>
+        <span className="spawn-plus">+</span>
+        <span className="small muted">Spawn a {provider} agent</span>
+      </button>
+    );
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,17 +34,24 @@ function Spawner() {
         prompt: f.prompt || undefined,
         skills: f.skills,
       });
-      setF({ ...f, name: '', prompt: '' });
+      setF(EMPTY);
+      setOpen(false);
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <form className="pad spawner" onSubmit={submit}>
-      <h3>Spawn a {provider} agent</h3>
+    <form className="spawn-tile open" onSubmit={submit} onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
+      <div className="row" style={{ alignItems: 'center', padding: 0 }}>
+        <strong>New {provider} agent</strong>
+        <span className="spacer" />
+        <button type="button" onClick={() => setOpen(false)} title="cancel (Esc)">
+          ×
+        </button>
+      </div>
       <div className="grid2">
-        <input placeholder="name (e.g. Dwight)" value={f.name} onChange={(e) => set('name', e.target.value)} />
+        <input autoFocus placeholder="name (e.g. Dwight)" value={f.name} onChange={(e) => set('name', e.target.value)} />
         <input placeholder="role (e.g. reviewer)" value={f.role} onChange={(e) => set('role', e.target.value)} />
         <input placeholder={provider === 'codex' ? 'model (e.g. gpt-5-codex)' : 'model (e.g. sonnet, opus)'} value={f.model} onChange={(e) => set('model', e.target.value)} />
         <select value={f.effort} onChange={(e) => set('effort', e.target.value)}>
@@ -42,9 +61,9 @@ function Spawner() {
           ))}
         </select>
       </div>
-      <input style={{ width: '100%', marginTop: 6 }} placeholder="working dir (blank = private scratch dir)" value={f.cwd} onChange={(e) => set('cwd', e.target.value)} />
+      <input placeholder="working dir (blank = private scratch dir)" value={f.cwd} onChange={(e) => set('cwd', e.target.value)} />
       <label className="row small">
-        <input type="checkbox" checked={f.worktree} onChange={(e) => set('worktree', e.target.checked)} /> give it its own git worktree of that dir
+        <input type="checkbox" checked={f.worktree} onChange={(e) => set('worktree', e.target.checked)} /> own git worktree of that dir
       </label>
       {skills.length > 0 && (
         <details>
@@ -52,11 +71,7 @@ function Spawner() {
           <div className="skill-list">
             {skills.map((s) => (
               <label key={s.name} className="row small" title={s.description}>
-                <input
-                  type="checkbox"
-                  checked={f.skills.includes(s.name)}
-                  onChange={(e) => set('skills', e.target.checked ? [...f.skills, s.name] : f.skills.filter((x) => x !== s.name))}
-                />
+                <input type="checkbox" checked={f.skills.includes(s.name)} onChange={(e) => set('skills', e.target.checked ? [...f.skills, s.name] : f.skills.filter((x) => x !== s.name))} />
                 {s.name} <span className="muted">{s.source}</span>
               </label>
             ))}
@@ -64,10 +79,9 @@ function Spawner() {
         </details>
       )}
       <textarea rows={3} placeholder="first prompt (optional)" value={f.prompt} onChange={(e) => set('prompt', e.target.value)} />
-      <button className="primary" disabled={busy}>{busy ? 'spawning…' : 'Spawn'}</button>
-      <p className="muted small">Agents run with no permission limits (Claude: bypassPermissions · Codex: danger-full-access + never ask). Guard mods can still block calls.</p>
+      <button className="primary" disabled={busy}>
+        {busy ? 'spawning…' : 'Spawn'}
+      </button>
     </form>
   );
 }
-
-registerView({ id: 'spawner', title: 'Spawner', render: () => <Spawner /> });

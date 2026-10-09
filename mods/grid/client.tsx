@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SpawnTile } from './spawn-tile.tsx';
 import { EventLine, StatusBadge, floor, fmtUsage, registerView, useAgentEvents, useFloor, type AgentInfo, type ViewProps } from 'universal-mods';
 
 /** Stable hue per agent name, so each agent keeps its colour. */
@@ -116,11 +117,11 @@ function Grid({ params, setParams }: ViewProps) {
           ))}
         </select>
       </div>
-      {shown.length === 0 && <div className="muted pad">No agents yet. Use the Spawner view.</div>}
       <div className="grid-cards" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {shown.map((a) => (
           <AgentCard key={a.id} a={a} />
         ))}
+        <SpawnTile />
       </div>
     </div>
   );

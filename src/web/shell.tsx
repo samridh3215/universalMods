@@ -9,7 +9,7 @@ type Pane = { view: string; params?: Record<string, any> };
 type Layout = Pane[][];
 
 const PRESETS: Record<string, Layout> = {
-  ops: [[{ view: 'spawner' }, { view: 'mods' }], [{ view: 'grid' }], [{ view: 'timeline' }]],
+  ops: [[{ view: 'mods' }], [{ view: 'grid' }], [{ view: 'timeline' }]],
   plan: [[{ view: 'kanban' }], [{ view: 'board' }, { view: 'timeline' }]],
   focus: [[{ view: 'grid', params: { columns: 1 } }]],
   roadmap: [[{ view: 'roadmap', params: { mode: 'flow' } }], [{ view: 'grid', params: { columns: 1 } }, { view: 'timeline' }]],

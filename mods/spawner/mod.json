@@ -1,1 +1,0 @@
-{ "id": "spawner", "name": "Spawner", "description": "Form to spawn agents on this floor (model, effort, cwd/worktree, skills, first prompt)." }

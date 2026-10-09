@@ -15,7 +15,7 @@ The shell is deliberately thin. Every view, guard, status line and command is a 
 
 Inspired by [Munder Difflin](https://github.com/HarnessMD/munder-difflin) (agent orchestration as an office floor) and Claude Code mods (hackable harness hooks).
 
-![The floor: spawner, live agent grid, timeline and mods](docs/screenshots/floor.png)
+![The floor: live agent grid with a + tile to spawn agents, kanban and mods](docs/screenshots/floor.png)
 
 ![Roadmap mod: a live Mermaid flowchart drafted and updated by a PM agent](docs/screenshots/roadmap.png)
 
@@ -44,7 +44,7 @@ Requirements:
 
 | Feature | Details |
 |---|---|
-| Spawner | Name, role, model, effort, working dir or its own **git worktree**, skills, first prompt |
+| Spawning | Click the **+** tile in the agent grid. Set name, role, model, effort, working dir or its own **git worktree**, skills and a first prompt |
 | Agent grid | Live stream per agent. **Send** queues the next turn. **⌘/Ctrl+Enter steers** the running turn. Also Interrupt / Hold / Stop / Archive |
 | Hive (shared by agents and you) | Kanban, plan board and messages, exposed to every agent as `hive` MCP tools: `list_agents`, `send_message`, `spawn_agent`, `task_*`, `board_*`, `ask_user` |
 | Timeline | Every event from every agent, filterable |
@@ -77,7 +77,7 @@ src/providers   claude/ and codex/: config adapter, runtime, stream normalizer
 src/server      floor (agents/queues), hive (files), http+ws API, MCP + hook bridges
 src/web         shell, client SDK (`universal-mods`), built-in Mods & Agent config views
 bin/            hive-mcp.mjs (stdio MCP server), um-hook.mjs (hook bridge)
-mods/           spawner, grid, timeline, kanban, roadmap, status, guard-example
+mods/           grid (with spawning), timeline, kanban, roadmap, status, guard-example
 data/           per-floor state (gitignored): floor.json, registry, tasks, board, events
 ```
 

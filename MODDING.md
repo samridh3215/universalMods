@@ -7,7 +7,7 @@ mods/my-mod/
   mod.json        { "id", "name", "description", "enabled"?, "provider"?: "claude"|"codex", "options"? }
   server.ts       optional: hooks on the floor (Node, bundled by esbuild)
   client.tsx      optional: views / toolbar widgets for the browser
-  skills/<name>/SKILL.md   optional: skills offered in the spawner (work on both platforms)
+  skills/<name>/SKILL.md   optional: skills offered when spawning an agent (work on both platforms)
 ```
 
 Setting `"provider"` restricts a mod to one platform's floors. Leave it out for both.
