@@ -1,6 +1,7 @@
 // Builds the `$` object handed to server-mod hooks.
 import type { ModContext } from '../core/types.ts';
 import type { Floor } from './floor.ts';
+import { HIVE_TOOLS } from './mcp-tools.ts';
 
 export function makeContext(floor: Floor, mod: string, timers: Set<NodeJS.Timeout>): ModContext {
   return {
@@ -51,6 +52,15 @@ export function makeContext(floor: Floor, mod: string, timers: Set<NodeJS.Timeou
       register: (name, description) => {
         floor.commands.set(name, { mod, description });
         floor.o.broadcast({ type: 'commands', commands: [...floor.commands].map(([n, c]) => ({ name: n, ...c })) });
+      },
+    },
+    tool: {
+      register: (def, handler) => {
+        if (!/^[a-z][a-z0-9_]{1,48}$/.test(def.name)) throw new Error(`invalid tool name "${def.name}" (use snake_case)`);
+        if (HIVE_TOOLS.some((t) => t.name === def.name)) throw new Error(`tool "${def.name}" is a built-in hive tool`);
+        const owner = floor.modTools.get(def.name)?.mod;
+        if (owner && owner !== mod) throw new Error(`tool "${def.name}" is already registered by mod ${owner}`);
+        floor.modTools.set(def.name, { mod, def, handler });
       },
     },
     log: (...a) => floor.log(`[${mod}]`, ...a),

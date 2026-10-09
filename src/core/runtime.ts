@@ -105,7 +105,7 @@ export class ModRuntime {
   async load(id: string): Promise<void> {
     const mod = this.mods.get(id);
     if (!mod) return;
-    this.unload(id);
+    this.unload(id); // also tells the host to forget the mod's commands/tools before re-registering
     mod.error = undefined;
     const timers = new Set<NodeJS.Timeout>();
     this.timers.set(id, timers);

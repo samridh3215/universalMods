@@ -13,6 +13,7 @@ Coordinate through the "hive" MCP tools:
 - ${tool('task_list')}, ${tool('task_add')} {title, detail?, assignee?}, ${tool('task_update')} {id, status?, assignee?}: the shared kanban (todo → doing → review → done). Move your tasks as you work.
 - ${tool('board_read')}, ${tool('board_write')} {text}: the shared plan document. Read it before big decisions.
 - ${tool('ask_user')} {question}: block until the human answers. Use only when truly stuck.
+Floor mods may add more hive tools (e.g. roadmap_*); list your tools to see them.
 
 Messages from other agents arrive as user turns starting with "[message from <name>]".
 When you finish a task, update it and tell whoever asked for it.`;

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { Bus } from '../core/bus.ts';
 import { ModRuntime } from '../core/runtime.ts';
 import { KeyValueStore, SessionState } from '../core/store.ts';
-import type { AgentEvent, AgentInfo, AgentStatus, ModContext, ProviderId, SpawnSpec, Task, ToolDecision } from '../core/types.ts';
+import type { AgentEvent, AgentInfo, AgentStatus, ModContext, ModToolDef, ModToolHandler, ProviderId, SpawnSpec, Task, ToolDecision } from '../core/types.ts';
 import { getProvider, type Provider } from '../providers/index.ts';
 import type { ProviderSession } from '../providers/types.ts';
 import { makeContext } from './context.ts';
@@ -45,6 +45,7 @@ export class Floor {
   readonly sessionState = new SessionState();
   readonly contexts = new Map<string, ModContext>();
   readonly commands = new Map<string, { mod: string; description: string }>();
+  readonly modTools = new Map<string, { mod: string; def: ModToolDef; handler: ModToolHandler }>();
   readonly questions = new Map<string, Question>();
   status = new Map<string, string>();
   halted = false;
@@ -70,11 +71,19 @@ export class Floor {
         return c;
       },
       onChange: (mod, kind) => {
+        if (kind !== 'loaded') this.forgetMod(mod);
         this.o.broadcast({ type: 'mods', mods: this.runtime.list(), changed: mod, kind });
         if (kind === 'loaded') void this.bus.emit('session.start', { provider: o.provider, dataDir: o.dataDir }, () => undefined, { only: mod });
       },
       log: (...a) => this.log(...a),
     });
+  }
+
+  /** Drop commands and agent tools a mod registered (it is unloading or reloading). */
+  private forgetMod(mod: string) {
+    for (const [k, v] of this.commands) if (v.mod === mod) this.commands.delete(k);
+    for (const [k, v] of this.modTools) if (v.mod === mod) this.modTools.delete(k);
+    this.o.broadcast({ type: 'commands', commands: [...this.commands].map(([n, c]) => ({ name: n, ...c })) });
   }
 
   log(...a: unknown[]) {

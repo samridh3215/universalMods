@@ -37,10 +37,20 @@ export const HIVE_TOOLS = [
   { name: 'ask_user', description: 'Ask the human supervisor a question and wait for the answer.', inputSchema: { type: 'object', properties: { question: { type: 'string' } }, required: ['question'] } },
 ];
 
+/** Built-in hive tools plus any registered by mods. */
+export function hiveTools(floor: Floor) {
+  return [...HIVE_TOOLS, ...[...floor.modTools.values()].map((t) => t.def)];
+}
+
 export async function handleMcpTool(floor: Floor, tool: string, agentId: string, a: Record<string, any>): Promise<{ text: string }> {
   const me = floor.get(agentId);
   if (!me) throw new Error(`unknown agent ${agentId}`);
   const json = (v: unknown) => ({ text: JSON.stringify(v, null, 2) });
+  const modTool = floor.modTools.get(tool);
+  if (modTool) {
+    const out = await modTool.handler(a, { agentId: me.id, agentName: me.name });
+    return typeof out === 'string' ? { text: out } : json(out ?? { ok: true });
+  }
   switch (tool) {
     case 'list_agents':
       return json(floor.list().map((x) => ({ id: x.id, name: x.name, role: x.role, status: x.status, activity: x.lastActivity, you: x.id === me.id })));

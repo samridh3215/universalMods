@@ -12,6 +12,7 @@ const PRESETS: Record<string, Layout> = {
   ops: [[{ view: 'spawner' }, { view: 'mods' }], [{ view: 'grid' }], [{ view: 'timeline' }]],
   plan: [[{ view: 'kanban' }], [{ view: 'board' }, { view: 'timeline' }]],
   focus: [[{ view: 'grid', params: { columns: 1 } }]],
+  roadmap: [[{ view: 'roadmap', params: { mode: 'flow' } }], [{ view: 'grid', params: { columns: 1 } }, { view: 'timeline' }]],
 };
 
 function loadLayouts(): Record<string, Layout> {
@@ -113,7 +114,8 @@ function Shell() {
   const s = useFloor();
   const { views, toolbar } = useRegistry();
   const [layouts, setLayouts] = useState(loadLayouts);
-  const [name, setName] = useState(() => localStorage.getItem('um.layout') ?? 'ops');
+  // ?layout=<name> picks a layout (handy for sharing a view); otherwise the last one used.
+  const [name, setName] = useState(() => new URLSearchParams(location.search).get('layout') ?? localStorage.getItem('um.layout') ?? 'ops');
   const layout = layouts[name] ?? PRESETS.ops;
 
   useEffect(() => {

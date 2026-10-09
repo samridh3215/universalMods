@@ -5,7 +5,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { Floor } from './floor.ts';
 import { handleHook } from './hookbridge.ts';
-import { HIVE_TOOLS, handleMcpTool } from './mcp-tools.ts';
+import { handleMcpTool, hiveTools } from './mcp-tools.ts';
 import type { WebAssets } from './web-build.ts';
 
 type Handler = (req: http.IncomingMessage, body: any, params: string[], url: URL) => Promise<unknown> | unknown;
@@ -62,7 +62,7 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
   route('POST', '/api/mods/:id/press', (_q, b, [id]) => F().bus.emit('ui.press', { mod: id, key: String(b.key), payload: b.payload }, () => null, { only: id }));
   route('POST', '/api/commands/:name', (_q, b, [name]) => F().runCommand(decodeURIComponent(name), String(b.args ?? ''), 'user'));
   // Agent-side bridges.
-  route('GET', '/api/hive-tools', () => ({ tools: HIVE_TOOLS }));
+  route('GET', '/api/hive-tools', () => ({ tools: hiveTools(F()) }));
   route('POST', '/api/hook', (_q, b) => handleHook(F(), b));
   route('POST', '/api/mcp/:tool', (_q, b, [tool]) => handleMcpTool(F(), tool, b.agentId, b.args ?? {}));
 

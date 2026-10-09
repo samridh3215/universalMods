@@ -62,7 +62,32 @@ The matcher is either an object (each key must equal the event's value, or pass 
 | UI | `$.ui.toast(text, level)`, `$.ui.status(text)` (top bar), `$.ui.publish(channel, data)` (to your client) |
 | State | `$.state.get/set` (session), `$.store.get/set` (persisted per mod) |
 | Timers and commands | `$.clock.every/after` (cleared on reload), `$.command.register(name, description)` |
+| Agent tools | `$.tool.register({ name, description, inputSchema }, handler)` gives every agent a new hive MCP tool |
 | Info | `$.log`, `$.provider`, `$.dataDir` |
+
+### Giving agents new tools
+
+A mod can extend what agents can do, not just what you see. Register the tool in `session.start`:
+
+```ts
+on('session.start', ($, _e, next) => {
+  $.tool.register(
+    { name: 'release_notes', description: 'Append a line to the release notes', inputSchema: { type: 'object', properties: { line: { type: 'string' } }, required: ['line'] } },
+    (args, caller) => {
+      const notes = $.store.get<string[]>('notes', []);
+      $.store.set('notes', [...notes, `${caller.agentName}: ${args.line}`]);
+      return 'added';
+    },
+  );
+  return next();
+});
+```
+
+- Claude sees the tool as `mcp__hive__release_notes`; Codex sees it as `hive.release_notes`.
+- Return a string, or any JSON value.
+- Tools disappear when the mod is disabled.
+- Running agents pick up new tools the next time they start (Stop, then send).
+- `mods/roadmap` is a full example: it registers `roadmap_get/_set/_upsert/_move/_remove`, keeps state in `$.store`, pushes it live with `$.ui.publish`, and renders it as a Mermaid flowchart.
 
 ## Client half: views
 

@@ -1,0 +1,5 @@
+{
+  "id": "roadmap",
+  "name": "Product roadmap",
+  "description": "Now / Next / Later / Shipped roadmap that agents draft and edit through roadmap_* tools; progress updates live from kanban tasks tagged [Rn]."
+}

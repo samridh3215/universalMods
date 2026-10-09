@@ -192,8 +192,21 @@ export interface ModContext {
   command: {
     register(name: string, description: string): void;
   };
+  /** Give agents a new hive MCP tool (Claude: mcp__hive__<name>, Codex: hive.<name>). */
+  tool: {
+    register(def: ModToolDef, handler: ModToolHandler): void;
+  };
   log(...args: unknown[]): void;
 }
+
+export interface ModToolDef {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+/** Return a string, or any JSON value (sent to the agent pretty-printed). */
+export type ModToolHandler = (args: Record<string, any>, caller: { agentId: string; agentName: string }) => unknown | Promise<unknown>;
 
 export type Register = (on: On, options: Record<string, unknown>) => void | Promise<void>;
 

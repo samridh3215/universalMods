@@ -9,6 +9,18 @@ A floor runs **one platform only**. Claude and Codex agents never share a floor,
 
 The shell is deliberately thin. Every view, guard, status line and command is a mod, so you can re-mod the UI for any use case.
 
+Inspired by [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) (agent orchestration as an office floor) and Claude Code mods (hackable harness hooks).
+
+![The floor: spawner, live agent grid, timeline and mods](docs/screenshots/floor.png)
+
+![Roadmap mod: a live Mermaid flowchart drafted and updated by a PM agent](docs/screenshots/roadmap.png)
+
+<details><summary>Light mode</summary>
+
+![Roadmap in light mode](docs/screenshots/roadmap-light.png)
+
+</details>
+
 ## Quick start
 
 ```bash
@@ -34,7 +46,8 @@ Requirements:
 | Timeline | Every event from every agent, filterable |
 | "Needs you" tray | Shows `ask_user` questions. The agent blocks until you answer |
 | Floor controls | Halt/resume the whole floor, `/broadcast` (status mod), status line with token and $ totals |
-| Layouts | Panes of any view in columns. Split, close and switch views, then save named layouts (`ops`, `plan`, `focus` built in) |
+| Roadmap | A live Mermaid flowchart (Shipped → Now → Next → Later, with dependency arrows) or a board. A PM agent drafts it from a brief, and progress moves as kanban tasks tagged `[R3]` get done |
+| Layouts | Panes of any view in columns. Split, close and switch views, then save named layouts (`ops`, `plan`, `focus`, `roadmap` built in). Open one directly with `?layout=<name>` |
 | No limits | Claude uses `bypassPermissions`. Codex uses `danger-full-access` and approval `never`. Guards are opt-in mods |
 
 ## Platform config
@@ -60,7 +73,7 @@ src/providers   claude/ and codex/: config adapter, runtime, stream normalizer
 src/server      floor (agents/queues), hive (files), http+ws API, MCP + hook bridges
 src/web         shell, client SDK (`universal-mods`), built-in Mods & Agent config views
 bin/            hive-mcp.mjs (stdio MCP server), um-hook.mjs (hook bridge)
-mods/           spawner, grid, timeline, kanban, status, guard-example
+mods/           spawner, grid, timeline, kanban, roadmap, status, guard-example
 data/           per-floor state (gitignored): floor.json, registry, tasks, board, events
 ```
 
@@ -75,3 +88,7 @@ Agents run with **no permission limits** and can do anything your user account c
 ## Scripts
 
 `npm test` runs the unit tests (vitest). `npm run build` runs `tsc` and then bundles the shell and every mod for both platforms.
+
+## License
+
+[MIT](LICENSE)
