@@ -4,3 +4,4 @@ data*/
 .claude/
 *.log
 .DS_Store
+.serena/
