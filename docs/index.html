@@ -106,6 +106,7 @@
       .eyebrow { flex-wrap: wrap; justify-content: center; }
       h1, h2, .lede, .sub, .card p { overflow-wrap: anywhere; }
       .card code, .lede code { overflow-wrap: anywhere; }
+      .soon { margin: 12px 0 0; font-size: 13.5px; font-weight: 600; color: var(--amber); }
       .note { border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line)); background: color-mix(in srgb, var(--amber) 10%, var(--panel)); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
       footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
       footer .wrap { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
@@ -140,6 +141,7 @@
     <header class="hero">
       <div class="wrap">
         <span class="eyebrow">Works with <span class="pill codex">Codex</span> <span class="pill claude">Claude Code</span> · open source · MIT</span>
+        <p class="soon">🚧 Multiple agent providers support coming soon</p>
         <h1>Run a team of coding agents.<br /><span class="grad">Mod every part of the workflow.</span></h1>
         <p class="lede">universalMods is a web floor for orchestrating Codex or Claude Code agents. Every view, guard, tool and roadmap on it is a hot-reloading mod.</p>
         <div class="cta">
@@ -233,7 +235,7 @@
             <tr><td>Steer</td><td>native <code>turn/steer</code></td><td>interrupt, then continue the session</td></tr>
           </tbody>
         </table></div>
-        <p class="note" style="margin-top: 16px">universalMods currently targets <strong>Codex</strong> and <strong>Claude Code</strong> only. Support for more agent platforms is coming. Each platform is a provider under <code>src/providers/</code>, so contributions are welcome.</p>
+        <p class="note" style="margin-top: 16px">🚧 <strong>Multiple agent providers support coming soon.</strong> universalMods currently targets <strong>Codex</strong> and <strong>Claude Code</strong> only. Support for more agent platforms is coming. Each platform is a provider under <code>src/providers/</code>, so contributions are welcome.</p>
       </div>
     </section>
 

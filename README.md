@@ -5,6 +5,8 @@ Claude-Code-style **mods** plus a web **floor** for running and steering many ag
 - **Claude Code**: one long-lived `claude -p` stream-json process per agent.
 - **Codex**: one `codex app-server` (JSON-RPC) per agent.
 
+> 🚧 **Multiple agent providers support coming soon.**
+>
 > **Note:** universalMods currently targets **Codex** and **Claude Code** only. Support for more agent platforms is coming. Each one is a provider (runtime plus config adapter) under `src/providers/`, so contributions are welcome.
 
 A floor runs **one platform only**. Claude and Codex agents never share a floor, because their configs differ (see [Platform config](#platform-config)).
