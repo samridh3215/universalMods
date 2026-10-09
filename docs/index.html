@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>universalMods: a moddable floor for Codex and Claude Code agents</title>
+    <meta name="description" content="Run a team of Codex or Claude Code agents from your browser, and mod every part of the workflow: views, guards, tools and roadmaps." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta property="og:title" content="universalMods" />
+    <meta property="og:description" content="Munder Difflin-style agent orchestration meets Claude Code mods, for Codex and Claude Code, in the browser." />
+    <meta property="og:image" content="https://samridh3215.github.io/universalMods/screenshots/roadmap.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0f0ed" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111" />
+    <style>
+      :root {
+        --bg: #f6f6f3; --panel: #ffffff; --line: #e1e1d8; --text: #191918; --muted: #63635e;
+        --accent: #2b65d9; --violet: #7c5cd6; --pink: #d6457e; --amber: #c98a12; --teal: #0f9488; --ok: #197a43;
+        --claude: #d97757; --codex: #10a37f;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f0f0e; --panel: #181817; --line: #2b2b29; --text: #ececea; --muted: #9a9a94;
+          --accent: #6b9bff; --violet: #a48bf0; --pink: #f07aa8; --amber: #f0b74c; --teal: #2dc4b6; --ok: #34ad68;
+          --claude: #e8916f; --codex: #3cc79f;
+          color-scheme: dark;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 var(--font); }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code, pre { font-family: var(--mono); }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+      /* nav */
+      nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg) 85%, transparent); border-bottom: 1px solid var(--line); }
+      nav .wrap { display: flex; align-items: center; gap: 20px; height: 56px; }
+      .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text); font-size: 17px; }
+      .brand img { width: 22px; height: 22px; }
+      nav .links { display: flex; gap: 18px; margin-left: auto; font-size: 14px; }
+      nav .links a { color: var(--muted); }
+      nav .links a:hover { color: var(--text); text-decoration: none; }
+      .gh { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--text) !important; background: var(--panel); }
+      .rainbow { height: 2px; background: linear-gradient(90deg, var(--accent), var(--violet) 35%, var(--pink) 65%, var(--amber)); }
+
+      /* hero */
+      .hero { padding: 72px 0 40px; text-align: center; }
+      .eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); border: 1px solid var(--line); background: var(--panel); border-radius: 99px; padding: 4px 12px; }
+      .pill { font-weight: 700; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; padding: 1px 8px; border-radius: 99px; }
+      .pill.codex { color: var(--codex); background: color-mix(in srgb, var(--codex) 15%, transparent); }
+      .pill.claude { color: var(--claude); background: color-mix(in srgb, var(--claude) 15%, transparent); }
+      h1 { font-size: clamp(34px, 6vw, 60px); line-height: 1.08; letter-spacing: -0.03em; margin: 20px auto 16px; max-width: 900px; }
+      h1 .grad { background: linear-gradient(90deg, var(--accent), var(--violet), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .lede { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 720px; margin: 0 auto 28px; }
+      .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-weight: 600; font-size: 15px; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+      .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .btn:hover { text-decoration: none; filter: brightness(1.05); }
+      .shot { margin: 48px auto 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px -30px rgba(0,0,0,.45); background: var(--panel); }
+      .shot img { display: block; width: 100%; height: auto; }
+      .shot.dark-only { display: none; } .shot.light-only { display: block; }
+      @media (prefers-color-scheme: dark) { .shot.dark-only { display: block; } .shot.light-only { display: none; } }
+
+      /* sections */
+      section { padding: 64px 0; }
+      h2 { font-size: clamp(26px, 3.5vw, 36px); letter-spacing: -0.02em; margin: 0 0 10px; }
+      .sub { color: var(--muted); margin: 0 0 32px; max-width: 680px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; border-top: 3px solid var(--c, var(--accent)); }
+      .card h3 { margin: 0 0 6px; font-size: 17px; display: flex; gap: 8px; align-items: center; }
+      .card p { margin: 0; color: var(--muted); font-size: 15px; }
+      .icon { width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; font-size: 16px; background: color-mix(in srgb, var(--c, var(--accent)) 15%, transparent); }
+
+      .story { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .story .card { --c: var(--violet); }
+      .story .card:first-child { --c: var(--amber); }
+      .plus { text-align: center; font-size: 15px; color: var(--muted); margin: 18px 0 0; }
+
+      .split { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+      pre.code { background: #111; color: #e6e6e3; border-radius: 12px; padding: 18px 20px; font-size: 13.5px; line-height: 1.55; overflow-x: auto; margin: 0; border: 1px solid #2b2b29; }
+      .k { color: #c792ea; } .s { color: #c3e88d; } .f { color: #82aaff; } .c { color: #7a7a74; } .n { color: #f78c6c; }
+      ul.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+      ul.checks li { padding-left: 28px; position: relative; color: var(--muted); }
+      ul.checks li strong { color: var(--text); }
+      ul.checks li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; background: var(--ok); }
+
+      table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+      th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: color-mix(in srgb, var(--line) 35%, var(--panel)); }
+      th.codex { color: var(--codex); } th.claude { color: var(--claude); }
+      td code { font-size: 12.5px; }
+      tr:last-child td { border-bottom: none; }
+
+      .steps { counter-reset: s; display: grid; gap: 14px; }
+      .step { display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: start; }
+      .step::before { counter-increment: s; content: counter(s); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--accent); color: #fff; }
+      .step pre { margin: 6px 0 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 13.5px; overflow-x: auto; }
+
+      .table-wrap { overflow-x: auto; border-radius: 12px; }
+      .table-wrap table { min-width: 560px; }
+      .eyebrow { flex-wrap: wrap; justify-content: center; }
+      h1, h2, .lede, .sub, .card p { overflow-wrap: anywhere; }
+      .card code, .lede code { overflow-wrap: anywhere; }
+      .note { border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line)); background: color-mix(in srgb, var(--amber) 10%, var(--panel)); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+      footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+      footer .wrap { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+      html, body { overflow-x: hidden; }
+      @media (max-width: 760px) {
+        nav .links a:not(.gh) { display: none; }
+        .cta .btn { flex: 1 1 100%; justify-content: center; }
+        .grid { grid-template-columns: 1fr; }
+        .wrap { padding: 0 16px; }
+        .story, .split { grid-template-columns: 1fr; }
+        .hero { padding-top: 48px; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="wrap">
+        <a class="brand" href="#"><img src="logo.svg" alt="" /> universalMods</a>
+        <div class="links">
+          <a href="#why">Why</a>
+          <a href="#features">Features</a>
+          <a href="#mods">Mods</a>
+          <a href="#platforms">Platforms</a>
+          <a href="#start">Quick start</a>
+          <a class="gh" href="https://github.com/samridh3215/universalMods">★ GitHub</a>
+        </div>
+      </div>
+      <div class="rainbow"></div>
+    </nav>
+
+    <header class="hero">
+      <div class="wrap">
+        <span class="eyebrow">Works with <span class="pill codex">Codex</span> <span class="pill claude">Claude Code</span> · open source · MIT</span>
+        <h1>Run a team of coding agents.<br /><span class="grad">Mod every part of the workflow.</span></h1>
+        <p class="lede">universalMods is a web floor for orchestrating Codex or Claude Code agents. Every view, guard, tool and roadmap on it is a hot-reloading mod.</p>
+        <div class="cta">
+          <a class="btn primary" href="#start">Get started</a>
+          <a class="btn" href="https://github.com/samridh3215/universalMods">View on GitHub</a>
+          <a class="btn" href="https://github.com/samridh3215/universalMods/blob/main/MODDING.md">Write a mod</a>
+        </div>
+        <div class="shot dark-only"><img src="screenshots/floor.png" alt="The universalMods floor: spawner, live agent grid, timeline and mods" /></div>
+        <div class="shot light-only"><img src="screenshots/roadmap-light.png" alt="The universalMods floor with the roadmap flowchart" /></div>
+      </div>
+    </header>
+
+    <section id="why">
+      <div class="wrap">
+        <h2>The best of both worlds</h2>
+        <p class="sub">I use Codex every day. I also love two ideas from the Claude world, and I didn't want to choose.</p>
+        <div class="story">
+          <div class="card">
+            <h3><span class="icon">🏢</span> Agent orchestration</h3>
+            <p>Inspired by <a href="https://github.com/HarnessMD/munder-difflin">Munder Difflin</a>: a whole floor of agents, where you see who's working and who's stuck and needs you, and agents hand work to each other.</p>
+          </div>
+          <div class="card">
+            <h3><span class="icon">🧩</span> A hackable harness</h3>
+            <p>Inspired by Claude Code mods: a few lines of <code>on(event, ($, e, next) =&gt; …)</code> add a pane, guard a tool call or rewrite a prompt, and it hot-reloads.</p>
+          </div>
+        </div>
+        <p class="plus">universalMods brings both to Codex and Claude Code, in the browser.</p>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <h2>What you get</h2>
+        <p class="sub">A thin shell, with everything else built as a mod you can change.</p>
+        <div class="grid">
+          <div class="card" style="--c: var(--accent)"><h3><span class="icon">🚀</span> Spawn and steer</h3><p>Spawn agents with their own working directory or git worktree, model, effort and skills. Watch them live, then steer mid-turn, interrupt, hold or stop.</p></div>
+          <div class="card" style="--c: var(--violet)"><h3><span class="icon">🐝</span> A shared hive</h3><p>Every agent gets hive tools: a kanban, a plan board, messages to other agents, spawning teammates, and <code>ask_user</code> when stuck.</p></div>
+          <div class="card" style="--c: var(--pink)"><h3><span class="icon">🗺️</span> Live roadmap</h3><p>A PM agent drafts a roadmap from your brief and renders it as a Mermaid flowchart. Progress moves as tagged kanban tasks get done.</p></div>
+          <div class="card" style="--c: var(--amber)"><h3><span class="icon">🛡️</span> No limits, with guards</h3><p>Agents run unrestricted by default. A mod can still deny a dangerous call before it runs, on either platform.</p></div>
+          <div class="card" style="--c: var(--teal)"><h3><span class="icon">🧱</span> Your layout</h3><p>Put any view in any pane: grid, timeline, kanban, roadmap or your own. Save named layouts and share them with <code>?layout=</code>.</p></div>
+          <div class="card" style="--c: var(--ok)"><h3><span class="icon">♻️</span> Hot reload</h3><p>Save a file under <code>mods/</code> and the server and browser reload that mod in place, with no restart.</p></div>
+        </div>
+        <div class="shot dark-only" style="margin-top: 40px"><img src="screenshots/roadmap.png" alt="Roadmap mod rendered as a live Mermaid flowchart" /></div>
+      </div>
+    </section>
+
+    <section id="mods">
+      <div class="wrap split">
+        <div>
+          <h2>A mod is a folder</h2>
+          <p class="sub">Drop a folder into <code>mods/</code> with a <code>mod.json</code>, then add a server half to hook events, a client half to add views, or both.</p>
+          <ul class="checks">
+            <li><strong>Same hook rules as Claude Code.</strong> Call <code>next()</code> to pass an event on, return a value to answer it, or call <code>next({...e})</code> to rewrite it.</li>
+            <li><strong>Give agents new tools.</strong> <code>$.tool.register</code> adds a hive tool on both platforms.</li>
+            <li><strong>Patch platform config.</strong> <code>config.build</code> lets a mod tweak each agent's Codex TOML or Claude settings.</li>
+            <li><strong>Views in React.</strong> <code>registerView</code> plus hooks for the live floor state.</li>
+          </ul>
+        </div>
+        <pre class="code"><span class="c">// mods/budget/server.ts: hold agents that overspend</span>
+<span class="k">export const</span> <span class="f">register</span> = (on, options) =&gt; {
+  on(<span class="s">'agent.event'</span>, (e) =&gt; e.event.kind === <span class="s">'usage'</span>,
+    ($, e, next) =&gt; {
+      <span class="k">if</span> (e.agent.usage.costUsd &gt; <span class="n">0.5</span>) {
+        $.agent.<span class="f">hold</span>(e.agent.id, <span class="n">true</span>);
+        $.ui.<span class="f">toast</span>(<span class="s">`${e.agent.name} hit the budget`</span>);
+      }
+      <span class="k">return</span> <span class="f">next</span>();
+    });
+
+  <span class="c">// guard: works on Codex and Claude alike</span>
+  on(<span class="s">'tool.call'</span>, ($, e, next) =&gt;
+    <span class="s">/rm -rf \//</span>.test(e.input?.command ?? <span class="s">''</span>)
+      ? { decision: <span class="s">'deny'</span>, reason: <span class="s">'nope'</span> }
+      : <span class="f">next</span>());
+};</pre>
+      </div>
+    </section>
+
+    <section id="platforms">
+      <div class="wrap">
+        <h2>One floor, one platform</h2>
+        <p class="sub">Codex and Claude Code configure the same things very differently, so each floor runs one platform and has a config adapter for it. Your global <code>~/.codex</code> and <code>~/.claude</code> setup is never modified.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Concept</th><th class="codex">Codex</th><th class="claude">Claude Code</th></tr></thead>
+          <tbody>
+            <tr><td>Runtime</td><td><code>codex app-server</code> (JSON-RPC)</td><td><code>claude -p</code> stream-json</td></tr>
+            <tr><td>No-limits mode</td><td><code>danger-full-access</code>, approval <code>never</code></td><td><code>--dangerously-skip-permissions</code></td></tr>
+            <tr><td>Config</td><td><code>-c key=&lt;toml&gt;</code> overrides plus thread params</td><td>per-agent <code>--settings</code> JSON</td></tr>
+            <tr><td>Skills</td><td><code>.agents/skills</code></td><td>session plugin via <code>--plugin-dir</code></td></tr>
+            <tr><td>Hive tools</td><td><code>mcp_servers.hive</code></td><td><code>--mcp-config</code></td></tr>
+            <tr><td>Steer</td><td>native <code>turn/steer</code></td><td>interrupt, then continue the session</td></tr>
+          </tbody>
+        </table></div>
+        <p class="note" style="margin-top: 16px">universalMods currently targets <strong>Codex</strong> and <strong>Claude Code</strong> only. Support for more agent platforms is coming. Each platform is a provider under <code>src/providers/</code>, so contributions are welcome.</p>
+      </div>
+    </section>
+
+    <section id="start">
+      <div class="wrap">
+        <h2>Quick start</h2>
+        <p class="sub">You need Node 20 or later, plus Codex or Claude Code installed and logged in.</p>
+        <div class="steps">
+          <div class="step"><div><strong>Clone and install</strong><pre>git clone https://github.com/samridh3215/universalMods.git
+cd universalMods && npm install</pre></div></div>
+          <div class="step"><div><strong>Start a floor</strong><pre>npm run dev -- --provider codex     # or: --provider claude</pre></div></div>
+          <div class="step"><div><strong>Open the printed URL</strong> (it includes <code>?token=…</code>), spawn agents, and drop your own mods into <code>mods/</code>.</div></div>
+        </div>
+        <p class="note" style="margin-top: 24px">⚠️ Agents run with no permission limits and can do anything your user account can. The server binds to <code>127.0.0.1</code> and requires the per-run token.</p>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <span class="brand"><img src="logo.svg" alt="" /> universalMods</span>
+        <span>MIT licensed</span>
+        <a href="https://github.com/samridh3215/universalMods">GitHub</a>
+        <a href="https://github.com/samridh3215/universalMods/blob/main/MODDING.md">Modding guide</a>
+        <span style="margin-left: auto">Inspired by <a href="https://github.com/HarnessMD/munder-difflin">Munder Difflin</a> and Claude Code mods.</span>
+      </div>
+    </footer>
+  </body>
+</html>

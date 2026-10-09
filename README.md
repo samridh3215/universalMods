@@ -11,7 +11,7 @@ A floor runs **one platform only**. Claude and Codex agents never share a floor,
 
 The shell is deliberately thin. Every view, guard, status line and command is a mod, so you can re-mod the UI for any use case.
 
-Inspired by [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) (agent orchestration as an office floor) and Claude Code mods (hackable harness hooks).
+Inspired by [Munder Difflin](https://github.com/HarnessMD/munder-difflin) (agent orchestration as an office floor) and Claude Code mods (hackable harness hooks).
 
 ![The floor: spawner, live agent grid, timeline and mods](docs/screenshots/floor.png)
 
