@@ -13,6 +13,18 @@ const PRESETS: Record<string, Layout> = {
   plan: fromViews([['kanban'], ['board', 'timeline']]),
   focus: fromViews([[{ view: 'grid', params: { columns: 1 } }]]),
   roadmap: fromViews([[{ view: 'roadmap', params: { mode: 'flow' } }], [{ view: 'grid', params: { columns: 1 } }, 'kanban']]),
+  // Everything at a glance: agent tiles + live terminal | roadmap flowchart over the kanban.
+  showcase: [
+    { id: 'show-a', size: 1.1, panes: [{ id: 'show-grid', view: 'grid', params: { mode: 'tabs' } }] },
+    {
+      id: 'show-b',
+      size: 1,
+      panes: [
+        { id: 'show-roadmap', view: 'roadmap', size: 1.25, params: { mode: 'flow' } },
+        { id: 'show-kanban', view: 'kanban', size: 1 },
+      ],
+    },
+  ],
 };
 
 function loadLayouts(): Record<string, Layout> {

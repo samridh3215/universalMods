@@ -9,7 +9,8 @@
     "start": "tsx src/server/index.ts",
     "build": "tsc --noEmit && tsx src/server/build-check.ts",
     "test": "vitest run",
-    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const r=p.join('node_modules','node-pty','prebuilds');if(fs.existsSync(r))for(const d of fs.readdirSync(r)){const f=p.join(r,d,'spawn-helper');if(fs.existsSync(f))fs.chmodSync(f,0o755)}\""
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const r=p.join('node_modules','node-pty','prebuilds');if(fs.existsSync(r))for(const d of fs.readdirSync(r)){const f=p.join(r,d,'spawn-helper');if(fs.existsSync(f))fs.chmodSync(f,0o755)}\"",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "engines": {
     "node": ">=20"

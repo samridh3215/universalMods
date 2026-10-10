@@ -13,16 +13,26 @@ const loaded = new Map<string, number>();
 let chain = Promise.resolve();
 
 // Imports run one at a time so registerView() calls are attributed to the right mod.
+// Browsers cache a failed dynamic import per URL, so retries use a fresh URL (&a=n);
+// a version that keeps failing is reported once and not retried until it changes.
+const failed = new Map<string, { version: number; attempts: number }>();
+
 function loadMod(id: string, version: number) {
+  const f = failed.get(id);
+  if (f?.version === version && f.attempts >= 3) return;
   chain = chain.then(async () => {
     if (loaded.get(id) === version) return;
+    const attempt = failed.get(id)?.version === version ? failed.get(id)!.attempts : 0;
     UM._internal.dropMod(id);
     UM._internal.setCurrentMod(id);
     try {
-      await import(/* @vite-ignore */ `/mods/${encodeURIComponent(id)}/client.js?token=${encodeURIComponent(token)}&v=${version}`);
+      await import(/* @vite-ignore */ `/mods/${encodeURIComponent(id)}/client.js?token=${encodeURIComponent(token)}&v=${version}&a=${attempt}`);
       loaded.set(id, version);
+      failed.delete(id);
     } catch (e: any) {
-      toast(`client mod ${id} failed: ${e.message}`, 'error');
+      failed.set(id, { version, attempts: attempt + 1 });
+      if (attempt + 1 >= 3) toast(`client mod ${id} failed to load: ${e.message}`, 'error');
+      else setTimeout(() => loadMod(id, version), 800 * (attempt + 1));
     } finally {
       UM._internal.setCurrentMod(undefined);
     }

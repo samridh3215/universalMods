@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta property="og:title" content="universalMods" />
     <meta property="og:description" content="Munder Difflin-style agent orchestration meets Claude Code mods, for Codex and Claude Code, in the browser." />
-    <meta property="og:image" content="https://samridh3215.github.io/universalMods/screenshots/roadmap.png" />
+    <meta property="og:image" content="https://samridh3215.github.io/universalMods/screenshots/floor.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0f0ed" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111" />
@@ -150,8 +150,8 @@
           <a class="btn" href="https://github.com/samridh3215/universalMods">View on GitHub</a>
           <a class="btn" href="https://github.com/samridh3215/universalMods/blob/main/MODDING.md">Write a mod</a>
         </div>
-        <div class="shot dark-only"><img src="screenshots/floor.png" alt="The universalMods floor: live agent grid with a + tile to spawn agents, kanban and mods" /></div>
-        <div class="shot light-only"><img src="screenshots/roadmap-light.png" alt="The universalMods floor with the roadmap flowchart" /></div>
+        <div class="shot dark-only"><img src="screenshots/floor.png" alt="The universalMods showcase layout: agent tiles with the orchestrator's live terminal, the roadmap flowchart and the kanban" /></div>
+        <div class="shot light-only"><img src="screenshots/roadmap-light.png" alt="The universalMods showcase layout in light mode" /></div>
       </div>
     </header>
 
@@ -178,14 +178,14 @@
         <h2>What you get</h2>
         <p class="sub">A thin shell, with everything else built as a mod you can change.</p>
         <div class="grid">
-          <div class="card" style="--c: var(--accent)"><h3><span class="icon">🚀</span> Spawn and steer</h3><p>Spawn agents with their own working directory or git worktree, model, effort and skills. Watch them live, then steer mid-turn, interrupt, hold or stop.</p></div>
+          <div class="card" style="--c: var(--accent)"><h3><span class="icon">🖥️</span> Live terminals</h3><p>Every agent runs its real CLI. Click its tile and its terminal fills the pane: watch it work, type into it, or queue messages. A permanent master orchestrator is always there.</p></div>
           <div class="card" style="--c: var(--violet)"><h3><span class="icon">🐝</span> A shared hive</h3><p>Every agent gets hive tools: a kanban, a plan board, messages to other agents, spawning teammates, and <code>ask_user</code> when stuck.</p></div>
           <div class="card" style="--c: var(--pink)"><h3><span class="icon">🗺️</span> Live roadmap</h3><p>A PM agent drafts a roadmap from your brief and renders it as a Mermaid flowchart. Progress moves as tagged kanban tasks get done.</p></div>
           <div class="card" style="--c: var(--amber)"><h3><span class="icon">🛡️</span> No limits, with guards</h3><p>Agents run unrestricted by default. A mod can still deny a dangerous call before it runs, on either platform.</p></div>
           <div class="card" style="--c: var(--teal)"><h3><span class="icon">🧱</span> Your layout</h3><p>Put any view in any pane: grid, timeline, kanban, roadmap or your own. Save named layouts and share them with <code>?layout=</code>.</p></div>
-          <div class="card" style="--c: var(--ok)"><h3><span class="icon">♻️</span> Hot reload</h3><p>Save a file under <code>mods/</code> and the server and browser reload that mod in place, with no restart.</p></div>
+          <div class="card" style="--c: var(--ok)"><h3><span class="icon">✨</span> Mods from a sentence</h3><p>Describe a mod in plain English. A Mod Builder agent writes it, checks it loads, and it hot-reloads straight into your floor.</p></div>
         </div>
-        <div class="shot dark-only" style="margin-top: 40px"><img src="screenshots/roadmap.png" alt="Roadmap mod rendered as a live Mermaid flowchart" /></div>
+        <div class="shot dark-only" style="margin-top: 40px"><img src="screenshots/roadmap.png" alt="The roadmap flowchart, a Cost panel mod written by the Mod Builder agent, and the New mod form" /></div>
       </div>
     </section>
 
@@ -248,7 +248,7 @@
           <div class="step"><div><strong>Clone and install</strong><pre>git clone https://github.com/samridh3215/universalMods.git
 cd universalMods && npm install</pre></div></div>
           <div class="step"><div><strong>Start a floor</strong><pre>npm run dev -- --provider codex     # or: --provider claude</pre></div></div>
-          <div class="step"><div><strong>Open the printed URL</strong> (it includes <code>?token=…</code>), spawn agents, and drop your own mods into <code>mods/</code>.</div></div>
+          <div class="step"><div><strong>Open the printed URL</strong> (it includes <code>?token=…</code>). Add <code>&amp;layout=showcase</code> for the view in the screenshots, spawn agents, and build mods from the 🧩 menu.</div></div>
         </div>
         <p class="note" style="margin-top: 24px">⚠️ Agents run with no permission limits and can do anything your user account can. The server binds to <code>127.0.0.1</code> and requires the per-run token.</p>
       </div>

@@ -11,16 +11,19 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
  */
 export async function createMod(floor: Floor, description: string, target: 'floor' | 'project' = 'floor') {
   if (!description.trim()) throw new Error('describe the mod you want');
-  const dir = target === 'project' ? path.join(ROOT, 'mods') : path.join(floor.o.dataDir, 'mods');
+  const abs = target === 'project' ? path.join(ROOT, 'mods') : path.join(floor.o.dataDir, 'mods');
+  // The builder works in the project root, so prefer short relative paths in its brief.
+  const rel = (p: string) => (p.startsWith(ROOT + path.sep) ? path.relative(ROOT, p) : p);
+  const dir = rel(abs);
   const brief = `Create a new universalMods mod from this description:
 ---
 ${description.trim()}
 ---
 
 How mods work (read these first):
-- ${path.join(ROOT, 'MODDING.md')}: the mod API (server hooks, $ context, client views, agent tools).
-- Examples in ${path.join(ROOT, 'mods')}: status (small server mod), guard-example (tool guard), kanban and timeline (client views), roadmap (server + client + agent tools).
-- Types: ${path.join(ROOT, 'src/core/types.ts')} (server) and ${path.join(ROOT, 'src/web/mod-api.ts')} (client SDK).
+- MODDING.md: the mod API (server hooks, $ context, client views, agent tools).
+- Examples in mods/: status (small server mod), guard-example (tool guard), kanban and timeline (client views), roadmap (server + client + agent tools).
+- Types: src/core/types.ts (server) and src/web/mod-api.ts (client SDK).
 
 Rules:
 - Write everything into a new folder ${dir}/<mod-id>/ (kebab-case id): mod.json {id, name, description} plus server.ts and/or client.tsx.
