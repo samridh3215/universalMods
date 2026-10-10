@@ -5,6 +5,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { Floor } from './floor.ts';
 import { handleHook } from './hookbridge.ts';
+import { createMod } from './mod-builder.ts';
 import { handleMcpTool, hiveTools } from './mcp-tools.ts';
 import type { WebAssets } from './web-build.ts';
 
@@ -60,6 +61,7 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
   route('POST', '/api/messages', (_q, b) => F().message('user', String(b.to), String(b.text ?? '')));
   route('POST', '/api/questions/:id', (_q, b, [id]) => F().answer(id, String(b.answer ?? '')));
   route('POST', '/api/floor/halt', (_q, b) => F().halt(!!b.on));
+  route('POST', '/api/mod-builder', (_q, b) => createMod(F(), String(b.description ?? ''), b.target === 'project' ? 'project' : 'floor'));
   route('POST', '/api/mods/:id', (_q, b, [id]) => F().runtime.setEnabled(id, !!b.enabled));
   route('POST', '/api/mods/:id/press', (_q, b, [id]) => F().bus.emit('ui.press', { mod: id, key: String(b.key), payload: b.payload }, () => null, { only: id }));
   route('POST', '/api/commands/:name', (_q, b, [name]) => F().runCommand(decodeURIComponent(name), String(b.args ?? ''), 'user'));

@@ -120,6 +120,8 @@ export class Floor {
   }
 
   async boot() {
+    // Ensure the floor's own mods folder exists so new mods dropped there are watched.
+    fs.mkdirSync(path.join(this.o.dataDir, 'mods'), { recursive: true });
     await this.runtime.loadAll();
     this.runtime.watch();
     await this.ensureMaster();

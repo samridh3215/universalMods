@@ -5,7 +5,7 @@ import { AgentTerminal, StatusBadge, floor, fmtUsage, registerView, useFloor, ty
 /** Stable hue per agent name, so each agent keeps its colour. */
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 
-function AgentCard({ a }: { a: AgentInfo }) {
+function AgentCard({ a, collapsed, focused, onToggle, onFocus }: { a: AgentInfo; collapsed: boolean; focused: boolean; onToggle(): void; onFocus?(): void }) {
   const queued = useFloor((s) => s.queued[a.id] ?? 0);
   const [text, setText] = useState('');
 
@@ -16,8 +16,11 @@ function AgentCard({ a }: { a: AgentInfo }) {
   };
 
   return (
-    <div className={`agent-card${a.master ? ' master' : ''}`} data-status={a.status}>
-      <div className="agent-head">
+    <div className={`agent-card${a.master ? ' master' : ''}${collapsed ? ' card-collapsed' : ''}${focused ? ' card-focused' : ''}`} data-status={a.status}>
+      <div className="agent-head" onDoubleClick={onToggle} title="Double-click to collapse or expand">
+        <button className="icon" onClick={onToggle} title={collapsed ? 'Expand terminal' : 'Collapse to header'}>
+          {collapsed ? '▸' : '▾'}
+        </button>
         <span className="avatar" style={{ '--h': hue(a.name) } as React.CSSProperties}>
           {a.name.slice(0, 1).toUpperCase()}
         </span>
@@ -30,7 +33,13 @@ function AgentCard({ a }: { a: AgentInfo }) {
         <span className="muted small" title={a.cwd}>
           {fmtUsage(a)}
         </span>
+        {onFocus && (
+          <button className="icon" onClick={onFocus} title={focused ? 'Back to all agents' : 'Focus this agent'}>
+            {focused ? '⤡' : '⤢'}
+          </button>
+        )}
       </div>
+      {collapsed && a.lastActivity && <div className="card-activity small muted">{a.lastActivity}</div>}
       <div className="agent-controls">
         {a.status === 'stopped' || a.status === 'error' ? (
           <button className="primary" onClick={() => floor.start(a.id)} title="Launch the agent's terminal">
@@ -51,8 +60,8 @@ function AgentCard({ a }: { a: AgentInfo }) {
         </span>
       </div>
       {/* The agent's real CLI, live. Click into it to type directly. */}
-      <AgentTerminal agentId={a.id} />
-      <form
+      {!collapsed && <AgentTerminal agentId={a.id} />}
+      {!collapsed && <form
         className="agent-input"
         onSubmit={(e) => {
           e.preventDefault();
@@ -70,17 +79,21 @@ function AgentCard({ a }: { a: AgentInfo }) {
             }
           }}
         />
-      </form>
+      </form>}
     </div>
   );
 }
 
-function Grid({ params, setParams }: ViewProps) {
+function GridCards({ params, setParams }: ViewProps) {
   const agents = useFloor((s) => s.agents);
   const cols = params.columns ?? 2;
   const only: string[] | undefined = params.only;
   // The master orchestrator is always pinned first.
-  const shown = (only?.length ? agents.filter((a) => only.includes(a.id)) : agents).slice().sort((x, y) => Number(!!y.master) - Number(!!x.master));
+  const collapsed: string[] = params.collapsed ?? [];
+  const focus: string | undefined = params.focus && agents.some((a) => a.id === params.focus) ? params.focus : undefined;
+  const toggle = (id: string) => setParams({ ...params, collapsed: collapsed.includes(id) ? collapsed.filter((x) => x !== id) : [...collapsed, id] });
+  const all = (only?.length ? agents.filter((a) => only.includes(a.id)) : agents).slice().sort((x, y) => Number(!!y.master) - Number(!!x.master));
+  const shown = focus ? all.filter((a) => a.id === focus) : all;
   return (
     <div className="grid-view">
       <div className="grid-tools small">
@@ -106,13 +119,100 @@ function Grid({ params, setParams }: ViewProps) {
             </option>
           ))}
         </select>
+        <span className="spacer" />
+        {!focus && (
+          <>
+            <button onClick={() => setParams({ ...params, collapsed: all.map((a) => a.id) })} title="Collapse every agent to its header">
+              collapse all
+            </button>
+            <button onClick={() => setParams({ ...params, collapsed: [] })} title="Show every agent's terminal">
+              expand all
+            </button>
+          </>
+        )}
+        {focus && <button onClick={() => setParams({ ...params, focus: undefined })}>⤡ all agents</button>}
       </div>
-      <div className="grid-cards" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+      <div className={`grid-cards${focus ? ' focused' : ''}`} style={{ gridTemplateColumns: focus ? '1fr' : `repeat(${cols}, minmax(0, 1fr))` }}>
         {shown.map((a) => (
-          <AgentCard key={a.id} a={a} />
+          <AgentCard
+            key={a.id}
+            a={a}
+            collapsed={!focus && collapsed.includes(a.id)}
+            focused={focus === a.id}
+            onToggle={() => (focus ? setParams({ ...params, focus: undefined }) : toggle(a.id))}
+            onFocus={() => setParams({ ...params, focus: focus ? undefined : a.id, collapsed: collapsed.filter((x) => x !== a.id) })}
+          />
         ))}
-        <SpawnTile />
+        {!focus && <SpawnTile />}
       </div>
+    </div>
+  );
+}
+
+/** Tabs mode: a strip of agent tiles; the selected agent's terminal fills the rest of the pane. */
+function AgentTabs({ params, setParams }: ViewProps) {
+  const agents = useFloor((s) => s.agents);
+  const queued = useFloor((s) => s.queued);
+  const sorted = agents.slice().sort((x, y) => Number(!!y.master) - Number(!!x.master));
+  // `selected` undefined = default to the master; null = everything collapsed to tiles.
+  const sel: string | null = params.selected === null ? null : params.selected === '+' ? '+' : sorted.find((a) => a.id === params.selected)?.id ?? sorted[0]?.id ?? null;
+  const pick = (id: string | null) => setParams({ ...params, selected: id });
+  const current = sorted.find((a) => a.id === sel);
+  return (
+    <div className="agent-tabs">
+      <div className="tile-strip">
+        {sorted.map((a) => (
+          <button
+            key={a.id}
+            className={`agent-tile${a.id === sel ? ' active' : ''}${a.master ? ' master' : ''}`}
+            data-status={a.status}
+            onClick={() => pick(a.id === sel ? null : a.id)}
+            title={`${a.name} · ${a.role} · ${a.status}${a.id === sel ? ' (click to collapse)' : ''}`}
+          >
+            <span className="avatar" style={{ '--h': hue(a.name) } as React.CSSProperties}>
+              {a.name.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="tile-text">
+              <span className="tile-name">
+                {a.master && <span className="tile-star">★</span>}
+                {a.name}
+              </span>
+              <span className="tile-status">
+                <span className="tile-dot" /> {a.status}
+                {(queued[a.id] ?? 0) > 0 && ` · ${queued[a.id]} queued`}
+              </span>
+            </span>
+          </button>
+        ))}
+        <button className={`agent-tile add${sel === '+' ? ' active' : ''}`} onClick={() => pick(sel === '+' ? null : '+')} title="Spawn a new agent">
+          <span className="spawn-plus small-plus">+</span>
+          <span className="tile-text">
+            <span className="tile-name">New agent</span>
+          </span>
+        </button>
+      </div>
+      <div className="tab-body">
+        {sel === '+' && <SpawnTile startOpen onDone={(id) => pick(id ?? sorted[0]?.id ?? null)} />}
+        {current && <AgentCard key={current.id} a={current} collapsed={false} focused onToggle={() => pick(null)} />}
+        {sel === null && <div className="muted pad small">All agents collapsed. Click a tile to open its terminal.</div>}
+      </div>
+    </div>
+  );
+}
+
+function Grid(props: ViewProps) {
+  const { params, setParams } = props;
+  const mode: 'tabs' | 'grid' = params.mode ?? 'tabs';
+  return (
+    <div className="agents-view">
+      <div className="mode-switch small">
+        {(['tabs', 'grid'] as const).map((m) => (
+          <button key={m} className={mode === m ? 'active' : ''} onClick={() => setParams({ ...params, mode: m })}>
+            {m === 'tabs' ? 'Tabs' : 'Grid'}
+          </button>
+        ))}
+      </div>
+      {mode === 'tabs' ? <AgentTabs {...props} /> : <GridCards {...props} />}
     </div>
   );
 }

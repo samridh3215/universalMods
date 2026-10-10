@@ -4,10 +4,12 @@ import { floor, useFloor } from 'universal-mods';
 
 const EMPTY = { name: '', role: '', model: '', effort: '', cwd: '', worktree: false, prompt: '', skills: [] as string[] };
 
-export function SpawnTile() {
+/** In grid mode it starts as a "+" tile; in tabs mode it is shown open and reports back via onDone. */
+export function SpawnTile({ startOpen = false, onDone }: { startOpen?: boolean; onDone?(agentId?: string): void } = {}) {
   const provider = useFloor((s) => s.provider);
   const skills = useFloor((s) => s.skills);
-  const [open, setOpen] = useState(false);
+  const [open, setOpenRaw] = useState(startOpen);
+  const setOpen = (v: boolean) => (v ? setOpenRaw(true) : onDone ? onDone() : setOpenRaw(false));
   const [f, setF] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
   const set = (k: string, v: unknown) => setF({ ...f, [k]: v });
@@ -24,7 +26,7 @@ export function SpawnTile() {
     e.preventDefault();
     setBusy(true);
     try {
-      await floor.spawn({
+      const a = (await floor.spawn({
         name: f.name || undefined,
         role: f.role || undefined,
         model: f.model || undefined,
@@ -33,9 +35,10 @@ export function SpawnTile() {
         worktree: f.worktree,
         prompt: f.prompt || undefined,
         skills: f.skills,
-      });
+      })) as { id: string };
       setF(EMPTY);
-      setOpen(false);
+      if (onDone) onDone(a.id);
+      else setOpenRaw(false);
     } finally {
       setBusy(false);
     }

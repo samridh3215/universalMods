@@ -147,6 +147,8 @@ export const floor = {
   message: (to: string, text: string) => api('/api/messages', 'POST', { to, text }),
   answer: (id: string, answer: string) => api(`/api/questions/${enc(id)}`, 'POST', { answer }),
   halt: (on: boolean) => api('/api/floor/halt', 'POST', { on }),
+  /** Have a Mod Builder agent write a new mod from a plain-English description. */
+  createMod: (description: string, target: 'floor' | 'project' = 'floor') => api<{ agent: string; dir: string }>('/api/mod-builder', 'POST', { description, target }),
   setModEnabled: (id: string, enabled: boolean) => api(`/api/mods/${enc(id)}`, 'POST', { enabled }),
   /** Fire a ui.press event at a server mod's hooks. */
   press: (mod: string, key: string, payload?: unknown) => api(`/api/mods/${enc(mod)}/press`, 'POST', { key, payload }),

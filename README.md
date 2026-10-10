@@ -47,7 +47,8 @@ Requirements:
 | Master orchestrator | Every floor starts with a permanent **Orchestrator** agent (pinned first, cannot be deleted) that plans, spawns and coordinates the rest. `--workspace <dir>` sets its working directory |
 | Live terminals | Each agent runs its CLI's real TUI (`claude` / `codex`) in a PTY shown live in its grid card (xterm.js). Click in to type directly, or queue messages below it. Status, timeline and token usage come from the CLI's hooks. The first-run "trust this folder?" prompt is answered automatically. Use `--agent-mode stream` for headless JSON agents instead |
 | Markdown | Agent replies, the shared board (Edit / Preview), task details, hive messages and questions render as Markdown (raw HTML disabled) |
-| Spawning | Click the **+** tile in the agent grid. Set name, role, model, effort, working dir or its own **git worktree**, skills and a first prompt |
+| Agent pane | **Tabs** (default): a strip of agent tiles (name, status, ★ master); click one and its live terminal fills the pane, click it again to collapse back to tiles, **+ New agent** to spawn. **Grid**: all agents as cards, each collapsible to its header (▾), focusable full-size (⤢), with collapse/expand all |
+| New mod | 🧩 → **＋ New mod**: describe a mod in plain English and a *Mod Builder* agent writes it (from MODDING.md and the bundled mods), checks it loads without errors, and it hot-reloads into the floor. Save to the floor's `data/mods` or the project's `mods/` |
 | Agent grid | Live stream per agent. **Send** queues the next turn. **⌘/Ctrl+Enter steers** the running turn. Also Interrupt / Hold / Stop / Archive |
 | Hive (shared by agents and you) | Kanban, plan board and messages, exposed to every agent as `hive` MCP tools: `list_agents`, `send_message`, `spawn_agent`, `task_*`, `board_*`, `ask_user` |
 | Timeline | Every event from every agent, filterable |
