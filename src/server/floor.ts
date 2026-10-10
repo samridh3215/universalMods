@@ -12,6 +12,7 @@ import type { AgentEvent, AgentInfo, AgentStatus, ModContext, ModToolDef, ModToo
 import { getProvider, type Provider } from '../providers/index.ts';
 import type { ProviderSession } from '../providers/types.ts';
 import { makeContext } from './context.ts';
+import { PtyAgents } from './pty-agents.ts';
 import { Hive } from './hive.ts';
 import { instructionsFor } from './instructions.ts';
 import { discoverSkills } from './skills.ts';
@@ -26,6 +27,8 @@ export interface FloorOptions {
   token: string;
   /** Default working directory for the master orchestrator (`--workspace`). */
   workspace?: string;
+  /** 'pty' (default): agents run their real TUI in a live terminal. 'stream': headless JSON streams. */
+  agentMode?: 'pty' | 'stream';
   broadcast: (msg: Record<string, unknown>) => void;
   log?: (...a: unknown[]) => void;
 }
@@ -52,6 +55,7 @@ export class Floor {
   status = new Map<string, string>();
   halted = false;
   private sessions = new Map<string, ProviderSession>();
+  readonly ptyAgents = new PtyAgents(this);
   private queues = new Map<string, { text: string; from: string }[]>();
 
   constructor(readonly o: FloorOptions) {
@@ -86,6 +90,29 @@ export class Floor {
     for (const [k, v] of this.commands) if (v.mod === mod) this.commands.delete(k);
     for (const [k, v] of this.modTools) if (v.mod === mod) this.modTools.delete(k);
     this.o.broadcast({ type: 'commands', commands: [...this.commands].map(([n, c]) => ({ name: n, ...c })) });
+  }
+
+  get mode() {
+    return this.o.agentMode ?? 'pty';
+  }
+
+  /** Public entry for event producers outside the provider stream (hooks in pty mode). */
+  emitAgentEvent(agent: AgentInfo, ev: AgentEvent) {
+    this.onEvent(agent, ev);
+  }
+
+  /** The agent's CLI finished starting (pty mode: SessionStart hook). */
+  agentReady(agent: AgentInfo) {
+    if (agent.status === 'starting') this.setStatus(agent, agent.held ? 'held' : 'idle');
+    void this.drain(agent.id);
+  }
+
+  /** Launch an agent's session without sending anything (e.g. to type into its terminal). */
+  async start(id: string) {
+    const a = this.must(id);
+    if (this.sessions.has(a.id)) return;
+    this.setStatus(a, 'starting');
+    await this.startSession(a);
   }
 
   log(...a: unknown[]) {
@@ -213,24 +240,28 @@ export class Floor {
 
   private async startSession(agent: AgentInfo) {
     const { config } = this.agentConfig(agent.id);
+    const pty = this.mode === 'pty';
     try {
-      const s = await this.provider.start({
+      const ctx = {
         agent,
         agentDir: this.hive.agentDir(agent.id),
         config,
         env: this.agentEnv(agent),
-        resume: agent.sessionId,
-        emit: (ev) => this.onEvent(agent, ev),
-        approve: (tool, input) => this.approve(agent.id, tool, input, 'approval'),
-        onExit: (code) => {
+        // A CLI can only resume a session that has had at least one turn.
+        resume: pty && agent.turns === 0 ? undefined : agent.sessionId,
+        emit: (ev: AgentEvent) => this.onEvent(agent, ev),
+        approve: (tool: string, input: unknown) => this.approve(agent.id, tool, input, 'approval'),
+        onExit: (code: number | null) => {
           this.sessions.delete(agent.id);
           if (agent.status !== 'stopped') this.setStatus(agent, 'stopped');
           void this.bus.emit('agent.exit', { agent, code }, () => undefined);
         },
-        log: (...a) => this.log(...a),
-      });
+        log: (...a: unknown[]) => this.log(...a),
+      };
+      const s = pty ? this.ptyAgents.start(ctx) : await this.provider.start(ctx);
       this.sessions.set(agent.id, s);
-      this.setStatus(agent, agent.held ? 'held' : 'idle');
+      // In pty mode the agent is ready once its SessionStart hook arrives (see agentReady).
+      this.setStatus(agent, pty ? 'starting' : agent.held ? 'held' : 'idle');
     } catch (e: any) {
       this.onEvent(agent, { kind: 'error', message: `start failed: ${e.message}` });
       this.setStatus(agent, 'error');
@@ -291,22 +322,31 @@ export class Floor {
     }
     const item = q.shift()!;
     this.o.broadcast({ type: 'agent', agent: a, queued: q.length });
-    this.onEvent(a, { kind: 'user', text: item.text, from: item.from });
+    // In pty mode the UserPromptSubmit hook reports the prompt, so don't log it twice.
+    if (this.mode !== 'pty') this.onEvent(a, { kind: 'user', text: item.text, from: item.from });
     this.setStatus(a, 'working');
-    await this.sessions.get(id)!.send(item.from === 'user' ? item.text : `[message from ${item.from}]\n${item.text}`);
+    const text = item.from === 'user' ? item.text : `[message from ${item.from}]\n${item.text}`;
+    try {
+      await this.sessions.get(id)!.send(text);
+    } catch (e: any) {
+      this.onEvent(a, { kind: 'error', message: e.message });
+      this.setStatus(a, this.sessions.has(id) ? 'idle' : 'stopped');
+    }
   }
 
   async steer(id: string, text: string) {
     const a = this.must(id);
     const s = this.sessions.get(a.id);
     if (!s || a.status !== 'working') return this.send(a.id, text);
-    this.onEvent(a, { kind: 'user', text: `(steer) ${text}`, from: 'user' });
+    if (this.mode !== 'pty') this.onEvent(a, { kind: 'user', text: `(steer) ${text}`, from: 'user' });
     await s.steer(text);
   }
 
   async interrupt(id: string) {
     const a = this.must(id);
     await this.sessions.get(a.id)?.interrupt();
+    // Claude's TUI fires no hook when interrupted, so close the turn ourselves.
+    if (this.mode === 'pty') setTimeout(() => a.status === 'working' && this.onEvent(a, { kind: 'turn', phase: 'abort', error: 'interrupted' }), 2500);
   }
 
   async kill(id: string) {

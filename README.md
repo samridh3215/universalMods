@@ -45,6 +45,8 @@ Requirements:
 | Feature | Details |
 |---|---|
 | Master orchestrator | Every floor starts with a permanent **Orchestrator** agent (pinned first, cannot be deleted) that plans, spawns and coordinates the rest. `--workspace <dir>` sets its working directory |
+| Live terminals | Each agent runs its CLI's real TUI (`claude` / `codex`) in a PTY shown live in its grid card (xterm.js). Click in to type directly, or queue messages below it. Status, timeline and token usage come from the CLI's hooks. The first-run "trust this folder?" prompt is answered automatically. Use `--agent-mode stream` for headless JSON agents instead |
+| Markdown | Agent replies, the shared board (Edit / Preview), task details, hive messages and questions render as Markdown (raw HTML disabled) |
 | Spawning | Click the **+** tile in the agent grid. Set name, role, model, effort, working dir or its own **git worktree**, skills and a first prompt |
 | Agent grid | Live stream per agent. **Send** queues the next turn. **⌘/Ctrl+Enter steers** the running turn. Also Interrupt / Hold / Stop / Archive |
 | Hive (shared by agents and you) | Kanban, plan board and messages, exposed to every agent as `hive` MCP tools: `list_agents`, `send_message`, `spawn_agent`, `task_*`, `board_*`, `ask_user` |

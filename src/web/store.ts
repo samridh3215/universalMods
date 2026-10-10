@@ -80,6 +80,16 @@ const listeners = new Set<() => void>();
 const eventListeners = new Set<(e: StampedEvent) => void>();
 const channelListeners = new Set<(m: { mod: string; channel: string; data: unknown }) => void>();
 const modListeners = new Set<(m: { changed: string; kind: string }) => void>();
+const ptyListeners = new Set<(m: { agentId: string; data: string }) => void>();
+let socket: WebSocket | undefined;
+
+/** Live terminal output from agents (pty mode). */
+export const onPty = (fn: (m: { agentId: string; data: string }) => void) => (ptyListeners.add(fn), () => void ptyListeners.delete(fn));
+
+/** Send a message to the server over the live socket (terminal input / resize). */
+export function sendWs(msg: Record<string, unknown>) {
+  if (socket?.readyState === 1) socket.send(JSON.stringify(msg));
+}
 
 export const getState = () => state;
 export function subscribe(fn: () => void) {
@@ -152,6 +162,9 @@ function handle(m: any) {
     case 'event':
       for (const l of eventListeners) l(m as StampedEvent);
       return;
+    case 'pty':
+      for (const l of ptyListeners) l(m);
+      return;
     case 'tasks':
       return set({ tasks: m.tasks });
     case 'board':
@@ -188,7 +201,7 @@ export function connect() {
     void refresh().catch(() => {});
   }
   if (!token) return void setTimeout(connect, 1500);
-  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws?token=${encodeURIComponent(token)}`);
+  const ws = (socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws?token=${encodeURIComponent(token)}`));
   ws.onopen = () => {
     set({ connected: true });
     void refresh();

@@ -23,6 +23,7 @@ function args() {
     data: path.resolve(get('data') ?? process.env.UM_DATA ?? path.join(ROOT, 'data')),
     port: Number(get('port') ?? process.env.PORT ?? 4477),
     host: get('host') ?? '127.0.0.1',
+    agentMode: (get('agent-mode') === 'stream' ? 'stream' : 'pty') as 'pty' | 'stream',
     workspace: get('workspace') ? path.resolve(get('workspace')!) : undefined,
     mods: (get('mods') ?? '').split(',').filter(Boolean).map((p) => path.resolve(p)),
     token: process.env.UM_TOKEN ?? randomBytes(16).toString('hex'),
@@ -48,7 +49,7 @@ async function main() {
       throw new Error(`data dir ${o.data} is a ${existing.provider} floor; use --data <other dir> for a ${provider} floor`);
     }
     if (!existing) Hive.writeFloor(o.data, { provider, name: path.basename(o.data), createdAt: Date.now() });
-    floor = new Floor({ dataDir: o.data, provider, modDirs: [path.join(ROOT, 'mods'), path.join(o.data, 'mods'), ...o.mods], url, token: o.token, workspace: o.workspace, broadcast: (m) => broadcast(m) });
+    floor = new Floor({ dataDir: o.data, provider, modDirs: [path.join(ROOT, 'mods'), path.join(o.data, 'mods'), ...o.mods], url, token: o.token, workspace: o.workspace, agentMode: o.agentMode, broadcast: (m) => broadcast(m) });
     await floor.boot();
     console.log(`[floor] ${provider} floor ready (${o.data})`);
   };

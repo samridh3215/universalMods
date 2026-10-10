@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { floor, registerView, useFloor, type Task } from 'universal-mods';
+import { Markdown, floor, registerView, useFloor, type Task } from 'universal-mods';
 
 const COLS: Task['status'][] = ['todo', 'doing', 'review', 'done'];
 
@@ -46,7 +46,7 @@ function Kanban() {
                   <div>
                     <strong>{t.title}</strong>
                   </div>
-                  {t.detail && <div className="small">{t.detail}</div>}
+                  {t.detail && <Markdown className="small" text={t.detail} />}
                   <div className="small muted">
                     #{t.id} · by {name(t.createdBy)} {t.assignee ? `· ${name(t.assignee)}` : ''}
                   </div>
@@ -80,6 +80,7 @@ function Board() {
   const board = useFloor((s) => s.board);
   const [text, setText] = useState(board);
   const [dirty, setDirty] = useState(false);
+  const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!dirty) setText(board);
   }, [board, dirty]);
@@ -89,23 +90,33 @@ function Board() {
         <strong>Shared board</strong>
         <span className="muted small">{dirty ? 'unsaved' : 'agents read/write this via board_read / board_write'}</span>
         <span className="spacer" />
+        <button onClick={() => setEditing(!editing)}>{editing ? 'Preview' : 'Edit'}</button>
         <button
+          className="primary"
           disabled={!dirty}
           onClick={async () => {
             await floor.setBoard(text);
             setDirty(false);
+            setEditing(false);
           }}
         >
           Save
         </button>
       </div>
-      <textarea
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          setDirty(true);
-        }}
-      />
+      {editing ? (
+        <textarea
+          autoFocus
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            setDirty(true);
+          }}
+        />
+      ) : (
+        <div className="board-preview" onDoubleClick={() => setEditing(true)} title="Double-click to edit">
+          <Markdown text={text || '_Empty board. Click Edit to write the plan._'} />
+        </div>
+      )}
     </div>
   );
 }

@@ -224,9 +224,11 @@ export function Workspace({
   return (
     <main className={`layout${drag ? ' is-dragging' : ''}`}>
       {l.map((c, ci) => {
-        const allCollapsed = c.panes.every((p) => p.collapsed);
+        // Fold a column into a strip only while some other pane is open to take the space.
+        const anyOpen = l.some((col) => col.panes.some((p) => !p.collapsed));
+        const allCollapsed = anyOpen && c.panes.every((p) => p.collapsed);
         return [
-          ci > 0 && !allCollapsed && !l[ci - 1].panes.every((p) => p.collapsed) && (
+          ci > 0 && !allCollapsed && !(anyOpen && l[ci - 1].panes.every((p) => p.collapsed)) && (
             <div key={`h${c.id}`} className="divider col-divider" onPointerDown={(e) => startResize(e, 'col', l[ci - 1].id, c.id)} />
           ),
           <div

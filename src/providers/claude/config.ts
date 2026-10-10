@@ -61,9 +61,9 @@ export function writeClaudeConfig(i: ConfigInput, c: Record<string, any>): strin
 }
 
 /** CLI args for `claude -p` in bidirectional stream-json mode. */
-export function claudeArgs(agentDir: string, c: Record<string, any>, session: { id: string; resume: boolean }): string[] {
+export function claudeArgs(agentDir: string, c: Record<string, any>, session: { id: string; resume: boolean }, interactive = false): string[] {
   const p = claudePaths(agentDir);
-  const a = ['-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose'];
+  const a = interactive ? [] : ['-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose'];
   a.push('--settings', p.settings, '--mcp-config', p.mcp, '--plugin-dir', p.plugin);
   if (c.cli.dangerouslySkipPermissions) a.push('--dangerously-skip-permissions');
   if (c.cli.model) a.push('--model', c.cli.model);

@@ -42,6 +42,8 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
   route('GET', '/api/agents/:id/events', (_q, _b, [id], url) => F().hive.eventsFor(id, Number(url.searchParams.get('limit') ?? 500)));
   route('GET', '/api/agents/:id/config', (_q, _b, [id]) => F().agentConfig(id));
   route('POST', '/api/agents', (_q, b) => F().spawn(b ?? {}, 'user'));
+  route('GET', '/api/agents/:id/pty', (_q, _b, [id]) => F().ptyAgents.snapshot(F().get(id)?.id ?? id));
+  route('POST', '/api/agents/:id/start', (_q, _b, [id]) => F().start(id));
   route('POST', '/api/agents/:id/send', (_q, b, [id]) => F().send(id, String(b.text ?? ''), 'user'));
   route('POST', '/api/agents/:id/steer', (_q, b, [id]) => F().steer(id, String(b.text ?? '')));
   route('POST', '/api/agents/:id/interrupt', (_q, _b, [id]) => F().interrupt(id));
@@ -106,6 +108,15 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
     wss.handleUpgrade(req, socket, head, (ws) => {
       clients.add(ws);
       ws.on('close', () => clients.delete(ws));
+      // Viewers type into and resize agent terminals over the same socket.
+      ws.on('message', (raw) => {
+        try {
+          const m = JSON.parse(String(raw));
+          const f = F();
+          if (m.type === 'pty-in' && typeof m.data === 'string') f.ptyAgents.write(String(m.agentId), m.data);
+          else if (m.type === 'pty-resize') f.ptyAgents.resize(String(m.agentId), Number(m.cols), Number(m.rows));
+        } catch {}
+      });
     });
   });
 

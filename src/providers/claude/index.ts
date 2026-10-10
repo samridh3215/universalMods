@@ -22,6 +22,16 @@ export const claudeProvider: Provider = {
   buildConfig: buildClaudeConfig,
   writeConfig: writeClaudeConfig,
 
+  ptyCommand(ctx) {
+    const resume = !!ctx.resume;
+    return {
+      bin: BIN,
+      args: claudeArgs(ctx.agentDir, ctx.config, { id: ctx.resume ?? randomUUID(), resume }, true),
+      // New folders get a "Do you trust this folder?" prompt even in bypass mode; choose "Yes".
+      autoAnswers: [{ pattern: /Yes,Itrustthisfolder/, keys: ['\x1b[B', '\r'], delayMs: 2000 }],
+    };
+  },
+
   async start(ctx: StartContext): Promise<ProviderSession> {
     const sessionId = ctx.resume ?? randomUUID();
     let resume = !!ctx.resume;

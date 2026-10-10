@@ -71,6 +71,21 @@ export const codexProvider: Provider = {
   buildConfig: buildCodexConfig,
   writeConfig: writeCodexConfig,
 
+  ptyCommand(ctx) {
+    const c = ctx.config;
+    const args: string[] = [];
+    if (c.bypassHookTrust) args.push('--dangerously-bypass-hook-trust');
+    // Interactive equivalent of approvalPolicy "never" + danger-full-access.
+    args.push('--dangerously-bypass-approvals-and-sandbox');
+    for (const [k, v] of Object.entries(c.overrides ?? {})) args.push('-c', `${k}=${toToml(v)}`);
+    if (c.thread?.developerInstructions) args.push('-c', `developer_instructions=${toToml(c.thread.developerInstructions)}`);
+    if (c.thread?.model) args.push('-m', c.thread.model);
+    if (c.turn?.effort) args.push('-c', `model_reasoning_effort=${toToml(c.turn.effort)}`);
+    args.push(...(c.extraArgs ?? []));
+    if (ctx.resume) args.push('resume', ctx.resume);
+    return { bin: BIN, args };
+  },
+
   async start(ctx: StartContext): Promise<ProviderSession> {
     const c = ctx.config;
     const args: string[] = [];

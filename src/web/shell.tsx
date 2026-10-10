@@ -4,6 +4,7 @@ import { Component, useEffect, useRef, useState, useSyncExternalStore, type Reac
 import { _internal, floor, useFloor, type ViewDef } from './mod-api.ts';
 import { api, refresh, setToken } from './store.ts';
 import { ModsPanel, builtinViews } from './builtin-views.tsx';
+import { Markdown } from './markdown.tsx';
 import { fromViews, normalize, Workspace, type Layout } from './layout.tsx';
 
 // Built-in layouts. Users rearrange them freely; changes are saved per layout name.
@@ -247,7 +248,7 @@ function Questions() {
             void floor.answer(q.id, answers[q.id] ?? '');
           }}
         >
-          <strong>{agents.find((a) => a.id === q.agentId)?.name ?? q.agentId} needs you:</strong> {q.question}
+          <strong>{agents.find((a) => a.id === q.agentId)?.name ?? q.agentId} needs you:</strong> <Markdown text={q.question} />
           <input autoFocus value={answers[q.id] ?? ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} placeholder="answer…" />
           <button>Answer</button>
         </form>

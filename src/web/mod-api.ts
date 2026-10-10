@@ -135,6 +135,8 @@ export const floor = {
   steer: (id: string, text: string) => api(`/api/agents/${enc(id)}/steer`, 'POST', { text }),
   interrupt: (id: string) => api(`/api/agents/${enc(id)}/interrupt`, 'POST', {}),
   kill: (id: string) => api(`/api/agents/${enc(id)}/kill`, 'POST', {}),
+  /** Launch an agent's terminal without sending a prompt. */
+  start: (id: string) => api(`/api/agents/${enc(id)}/start`, 'POST', {}),
   hold: (id: string, held: boolean) => api(`/api/agents/${enc(id)}/hold`, 'POST', { held }),
   archive: (id: string) => api(`/api/agents/${enc(id)}/archive`, 'POST', {}),
   config: (id: string) => api(`/api/agents/${enc(id)}/config`),
@@ -153,3 +155,5 @@ export const floor = {
 
 export { React, toast };
 export { EventLine, StatusBadge, fmtUsage } from './components.tsx';
+export { AgentTerminal } from './terminal.tsx';
+export { Markdown } from './markdown.tsx';

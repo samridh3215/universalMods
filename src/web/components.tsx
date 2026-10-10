@@ -1,6 +1,7 @@
 // Small building blocks exported to client mods via the SDK.
 import { useState } from 'react';
 import type { AgentInfo, StampedEvent } from '../core/types.ts';
+import { Markdown } from './markdown.tsx';
 
 export function StatusBadge({ status }: { status: string }) {
   return <span className={`status-badge status-${status}`}>{status}</span>;
@@ -31,14 +32,14 @@ export function EventLine({ e, agentName }: { e: StampedEvent; agentName?: strin
         <div className="ev ev-user">
           {time}
           {who}
-          <strong>{ev.from && ev.from !== 'user' ? `← ${ev.from}` : 'you'}:</strong> <span style={{ whiteSpace: 'pre-wrap' }}>{ev.text}</span>
+          <strong>{ev.from && ev.from !== 'user' && ev.from !== 'terminal' ? `← ${ev.from}` : 'you'}:</strong> <Markdown text={ev.text} />
         </div>
       );
     case 'text':
       return (
         <div className="ev ev-text">
           {who}
-          <span style={{ whiteSpace: 'pre-wrap' }}>{ev.text}</span>
+          <Markdown text={ev.text} />
         </div>
       );
     case 'reasoning':

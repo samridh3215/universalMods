@@ -7,6 +7,8 @@ export async function handleHook(floor: Floor, b: { agentId: string; event: stri
   const agent = floor.get(b.agentId);
   if (!agent) return {};
   const hookEventName = b.event || b.payload?.hook_event_name;
+  // Live-terminal agents report their state only through hooks.
+  if (floor.mode === 'pty') floor.ptyAgents.onHook(agent, hookEventName, b.payload ?? {});
   const out = await floor.bus.emit('classic.hook', { agentId: agent.id, hookEventName, payload: b.payload ?? {} }, async (e) => {
     if (e.hookEventName === 'PreToolUse') {
       const d = await floor.approve(agent.id, e.payload.tool_name ?? 'tool', e.payload.tool_input, 'hook');

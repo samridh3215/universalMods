@@ -1,20 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { SpawnTile } from './spawn-tile.tsx';
-import { EventLine, StatusBadge, floor, fmtUsage, registerView, useAgentEvents, useFloor, type AgentInfo, type ViewProps } from 'universal-mods';
+import { AgentTerminal, StatusBadge, floor, fmtUsage, registerView, useFloor, type AgentInfo, type ViewProps } from 'universal-mods';
 
 /** Stable hue per agent name, so each agent keeps its colour. */
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 
 function AgentCard({ a }: { a: AgentInfo }) {
-  const events = useAgentEvents(a.id, 300);
   const queued = useFloor((s) => s.queued[a.id] ?? 0);
   const [text, setText] = useState('');
-  const end = useRef<HTMLDivElement>(null);
-  const [stick, setStick] = useState(true);
-
-  useEffect(() => {
-    if (stick) end.current?.scrollIntoView({ block: 'end' });
-  }, [events.length, stick]);
 
   const submit = (mode: 'send' | 'steer') => {
     if (!text.trim()) return;
@@ -39,9 +32,15 @@ function AgentCard({ a }: { a: AgentInfo }) {
         </span>
       </div>
       <div className="agent-controls">
-        <button disabled={a.status !== 'working'} onClick={() => floor.interrupt(a.id)}>
-          Interrupt
-        </button>
+        {a.status === 'stopped' || a.status === 'error' ? (
+          <button className="primary" onClick={() => floor.start(a.id)} title="Launch the agent's terminal">
+            Start
+          </button>
+        ) : (
+          <button disabled={a.status !== 'working'} onClick={() => floor.interrupt(a.id)} title="Interrupt (sends Esc)">
+            Interrupt
+          </button>
+        )}
         <button onClick={() => floor.hold(a.id, !a.held)}>{a.held ? 'Release' : 'Hold'}</button>
         <button className="danger-outline" onClick={() => floor.kill(a.id)} disabled={a.status === 'stopped'}>
           Stop
@@ -51,18 +50,8 @@ function AgentCard({ a }: { a: AgentInfo }) {
           {a.cwd.split('/').slice(-2).join('/')}
         </span>
       </div>
-      <div
-        className="agent-stream"
-        onScroll={(e) => {
-          const el = e.currentTarget;
-          setStick(el.scrollHeight - el.scrollTop - el.clientHeight < 40);
-        }}
-      >
-        {events.map((e) => (
-          <EventLine key={e.seq} e={e} />
-        ))}
-        <div ref={end} />
-      </div>
+      {/* The agent's real CLI, live. Click into it to type directly. */}
+      <AgentTerminal agentId={a.id} />
       <form
         className="agent-input"
         onSubmit={(e) => {
@@ -70,15 +59,14 @@ function AgentCard({ a }: { a: AgentInfo }) {
           submit('send');
         }}
       >
-        <textarea
-          rows={2}
+        <input
           value={text}
-          placeholder={a.status === 'working' ? 'Enter = queue next turn · ⌘/Ctrl+Enter = steer now' : 'message… (Enter to send)'}
+          placeholder={a.status === 'working' ? 'queue a message for its next turn (⌘/Ctrl+Enter: send now)…' : 'message (starts the agent if stopped)…'}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
               e.preventDefault();
-              submit(e.metaKey || e.ctrlKey ? 'steer' : 'send');
+              submit('steer');
             }
           }}
         />

@@ -19,6 +19,7 @@ export function webAssets(webDir: string, log: (...a: unknown[]) => void): WebAs
       format: 'esm',
       platform: 'browser',
       jsx: 'automatic',
+      loader: { '.css': 'text' },
       minify: false,
       sourcemap: 'inline',
       define: { 'process.env.NODE_ENV': '"development"' },

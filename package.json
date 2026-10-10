@@ -8,14 +8,20 @@
     "dev": "tsx src/server/index.ts",
     "start": "tsx src/server/index.ts",
     "build": "tsc --noEmit && tsx src/server/build-check.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const r=p.join('node_modules','node-pty','prebuilds');if(fs.existsSync(r))for(const d of fs.readdirSync(r)){const f=p.join(r,d,'spawn-helper');if(fs.existsSync(f))fs.chmodSync(f,0o755)}\""
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@types/markdown-it": "^14.2.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "esbuild": "^0.28.2",
+    "markdown-it": "^15.0.2",
     "mermaid": "^11.17.2",
+    "node-pty": "^1.1.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tsx": "^4.23.15",

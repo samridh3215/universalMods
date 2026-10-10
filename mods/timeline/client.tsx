@@ -1,4 +1,4 @@
-import { EventLine, registerView, useAgentEvents, useFloor, type ViewProps } from 'universal-mods';
+import { EventLine, Markdown, registerView, useAgentEvents, useFloor, type ViewProps } from 'universal-mods';
 
 const KINDS = ['user', 'text', 'tool', 'file', 'turn', 'error', 'reasoning', 'notice'];
 
@@ -33,7 +33,7 @@ function Timeline({ params, setParams }: ViewProps) {
           .reverse()
           .map((m) => (
             <div key={m.id} className="ev small">
-              <span className="muted">{new Date(m.ts).toLocaleTimeString()}</span> <strong>{names[m.from] ?? m.from}</strong> → <strong>{names[m.to] ?? m.to}</strong>: {m.text}
+              <span className="muted">{new Date(m.ts).toLocaleTimeString()}</span> <strong>{names[m.from] ?? m.from}</strong> → <strong>{names[m.to] ?? m.to}</strong>: <Markdown text={m.text} />
             </div>
           ))}
       </details>

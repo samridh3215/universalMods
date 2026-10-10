@@ -8,7 +8,7 @@ import path from 'node:path';
 import type { ConfigInput } from '../types.ts';
 import { linkSkills, toTomlDoc, writeFile } from '../util.ts';
 
-const HOOK_EVENTS = ['PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'Stop', 'SubagentStop', 'SessionStart', 'PreCompact'];
+const HOOK_EVENTS = ['PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'Stop', 'SubagentStop', 'SessionStart', 'PreCompact', 'Interrupt'];
 
 export function buildCodexConfig(i: ConfigInput): Record<string, any> {
   const hook = (event: string) => [{ ...(event.endsWith('ToolUse') ? { matcher: '.*' } : {}), hooks: [{ type: 'command', command: `${i.hookCommand} ${event}`, timeout: 600 }] }];
