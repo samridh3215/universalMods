@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>universalMods gallery 3</title>
+<link rel="stylesheet" href="base.css"><link rel="stylesheet" href="ph.css">
+<style>
+  .c-form { --c: var(--pink); left: 64px; top: 262px; width: 470px; }
+  .c-build { --c: var(--violet); left: 610px; top: 262px; width: 596px; }
+  .c-result { --c: var(--blue); left: 610px; top: 500px; width: 596px; }
+  .step { font-size: 14px; }
+  .s1 { --c: var(--pink); left: 64px; top: 224px; }
+  .s2 { --c: var(--violet); left: 610px; top: 224px; }
+  .s3 { --c: var(--blue); left: 610px; top: 462px; }
+  .a2 { left: 1150px; top: 410px; }
+  .note { position: absolute; left: 64px; top: 500px; width: 470px; z-index: 3; }
+  .note h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .note p { margin-top: 10px; font-size: 17px; line-height: 1.5; color: var(--muted); }
+  .note p b { color: var(--text); font-weight: 600; }
+  .a1 { left: 552px; top: 318px; }
+  </style></head>
+<body><div class="stage">
+  <div class="head">
+    <div class="kicker" style="color:var(--pink)">02 · Mods from a sentence</div>
+    <h1>Describe a mod. <span class="grad">Get a mod.</span></h1>
+    <p>A <strong>Mod Builder</strong> agent writes it, checks it loads, and it <strong>hot-reloads</strong> into the floor.</p>
+  </div>
+
+  <div class="tag step s1"><b>1</b>You describe it</div>
+  <div class="card c-form"><div class="crop" data-src="shot-newmod.png" data-box="994,98,500,180"></div></div>
+  <div class="arrow a1">→</div>
+
+  <div class="tag step s2"><b>2</b>Mod Builder writes and checks it</div>
+  <div class="arrow a2">↓</div>
+  <div class="card c-build"><div class="crop" data-src="shot-newmod.png" data-box="832,708,750,126"></div></div>
+
+  <div class="tag step s3"><b>3</b>It hot-reloads as a new panel</div>
+  <div class="card c-result"><div class="crop" data-src="shot-newmod.png" data-box="8,616,808,196"></div></div>
+  <div class="note"><h3>Everything is a mod.</h3><p>Every <b>view</b>, <b>guard</b>, <b>status line</b> and <b>command</b> on the floor is a Claude-Code-style mod. Edit files under <b>mods/</b> and they hot-reload, or let an agent write them.</p></div>
+</div>
+<script src="crop.js"></script>
+</body></html>

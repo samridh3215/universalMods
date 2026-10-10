@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>universalMods gallery 4</title>
+<link rel="stylesheet" href="base.css"><link rel="stylesheet" href="ph.css">
+<style>
+  .chips { margin-top: 16px; display: flex; gap: 8px; font: 600 14px 'JetBrains Mono', monospace; }
+  .chips span { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--muted); }
+  .chips span.on { color: var(--text); border-color: color-mix(in srgb, var(--blue) 60%, transparent); background: rgba(107,155,255,.12); }
+  .scene { position: absolute; inset: 0; perspective: 2000px; }
+  .window { width: 560px; }
+  .window .crop { width: 560px; }
+  .w1 { left: 40px; top: 360px; transform: rotateY(14deg) rotateZ(-2deg); }
+  .w2 { left: 355px; top: 330px; z-index: 2; transform: translateZ(40px); }
+  .w3 { left: 670px; top: 360px; z-index: 1; transform: rotateY(-14deg) rotateZ(2deg); }
+  .tag { font-size: 14px; z-index: 8; }
+  .l1 { --c: var(--violet); left: 70px; top: 330px; }
+  .l2 { --c: var(--blue); left: 575px; top: 298px; }
+  .l3 { --c: var(--amber); left: 1010px; top: 330px; }
+</style></head>
+<body><div class="stage">
+  <div class="head">
+    <div class="kicker" style="color:var(--blue)">03 · Your floor, your layout</div>
+    <h1>Dock, resize, save. <span class="grad">Any layout.</span></h1>
+    <p>Drag panes to dock or swap, collapse, maximize, add any mod as a panel, and open a saved layout with <strong>?layout=name</strong>.</p>
+    <div class="chips"><span>showcase</span><span class="on">mission</span><span>dashboard</span><span>planner</span><span>deepdive</span><span>arcade</span><span>zen</span><span>+ your own</span></div>
+  </div>
+  <div class="scene">
+    <div class="window w1"><div class="bar"><span></span><span></span><span></span></div><div class="crop" data-src="layouts/dashboard.png" data-box="0,0,1600,1000"></div></div>
+    <div class="window w3"><div class="bar"><span></span><span></span><span></span></div><div class="crop" data-src="layouts/planner-light.png" data-box="0,0,1600,1000"></div></div>
+    <div class="window w2"><div class="bar"><span></span><span></span><span></span></div><div class="crop" data-src="layouts/mission.png" data-box="0,0,1600,1000"></div></div>
+  </div>
+  <div class="tag l1"><b>⇄</b>dashboard</div>
+  <div class="tag l2"><b>▦</b>mission</div>
+  <div class="tag l3"><b>◐</b>planner · light</div>
+</div>
+<script src="crop.js"></script>
+</body></html>

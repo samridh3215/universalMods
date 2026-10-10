@@ -25,6 +25,101 @@ const PRESETS: Record<string, Layout> = {
       ],
     },
   ],
+  // Live terminals of several agents side by side, with the event stream and token spend.
+  mission: [
+    { id: 'mc-a', size: 1.75, panes: [{ id: 'mc-grid', view: 'grid', params: { mode: 'grid', columns: 2 } }] },
+    {
+      id: 'mc-b',
+      size: 1,
+      panes: [
+        { id: 'mc-timeline', view: 'timeline', size: 1.6 },
+        { id: 'mc-cost', view: 'cost-panel', size: 0.75 },
+      ],
+    },
+  ],
+  // One agent, up close: its terminal huge, with token spend and the timeline beside it.
+  deepdive: [
+    { id: 'dd-a', size: 2.2, panes: [{ id: 'dd-term', view: 'grid', params: { mode: 'tabs' } }] },
+    {
+      id: 'dd-b',
+      size: 1,
+      panes: [
+        { id: 'dd-cost', view: 'cost-panel', size: 0.6 },
+        { id: 'dd-timeline', view: 'timeline', size: 1.6 },
+      ],
+    },
+  ],
+  // Status at a glance: time, spend, who talks to whom, and the task board.
+  dashboard: [
+    {
+      id: 'db-a',
+      size: 0.85,
+      panes: [
+        { id: 'db-clock', view: 'clock', size: 0.6 },
+        { id: 'db-cost', view: 'cost-panel', size: 0.75 },
+      ],
+    },
+    {
+      id: 'db-b',
+      size: 1.35,
+      panes: [
+        { id: 'db-graph', view: 'agent-graph', size: 0.6 },
+        { id: 'db-kanban', view: 'kanban', size: 1.4 },
+      ],
+    },
+    { id: 'db-c', size: 0.9, panes: [{ id: 'db-timeline', view: 'timeline' }] },
+  ],
+  // Planning room: the roadmap as a flowchart and as columns, the kanban and the shared board.
+  planner: [
+    {
+      id: 'pl-a',
+      size: 1.45,
+      panes: [
+        { id: 'pl-flow', view: 'roadmap', size: 1.35, params: { mode: 'flow' } },
+        { id: 'pl-kanban', view: 'kanban', size: 1 },
+      ],
+    },
+    {
+      id: 'pl-b',
+      size: 1,
+      panes: [
+        { id: 'pl-columns', view: 'roadmap', size: 1.5, params: { mode: 'board' } },
+        { id: 'pl-board', view: 'board', size: 1 },
+      ],
+    },
+  ],
+  // The fun one: the agent graph centre stage under a giant clock, flanked by folded strips.
+  arcade: [
+    {
+      id: 'ar-a',
+      panes: [
+        { id: 'ar-kanban', view: 'kanban', collapsed: true },
+        { id: 'ar-board', view: 'board', collapsed: true },
+      ],
+    },
+    {
+      id: 'ar-b',
+      size: 2,
+      panes: [
+        { id: 'ar-clock', view: 'clock', size: 1.1 },
+        { id: 'ar-graph', view: 'agent-graph', size: 0.9 },
+      ],
+    },
+    {
+      id: 'ar-c',
+      size: 0.75,
+      panes: [
+        { id: 'ar-cost', view: 'cost-panel', size: 0.6 },
+        { id: 'ar-timeline', view: 'timeline', size: 1.4 },
+      ],
+    },
+  ],
+  // Nothing but the agent tiles and one terminal, with everything else folded away at the edges.
+  zen: [
+    { id: 'zen-l', panes: [{ id: 'zen-kanban', view: 'kanban', collapsed: true }] },
+    { id: 'zen-m', size: 3, panes: [{ id: 'zen-term', view: 'grid', params: { mode: 'tabs' } }] },
+    { id: 'zen-r', panes: [{ id: 'zen-timeline', view: 'timeline', collapsed: true }] },
+  ],
 };
 
 function loadLayouts(): Record<string, Layout> {

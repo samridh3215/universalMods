@@ -1,0 +1,16 @@
+/* Shared layout for the Product Hunt gallery (1270x760). */
+:root { --W: 1270px; --H: 760px; }
+.head { position: absolute; left: 64px; top: 52px; right: 64px; z-index: 3; }
+.head .kicker { font-size: 14px; }
+.head h1 { margin-top: 12px; font-size: 48px; line-height: 1.05; font-weight: 800; letter-spacing: -0.035em; }
+.head p { margin-top: 14px; font-size: 19px; line-height: 1.45; color: var(--muted); max-width: 780px; }
+.head p strong { color: var(--text); font-weight: 600; }
+.foot { position: absolute; left: 64px; bottom: 34px; z-index: 6; font-size: 16px; }
+.foot .brand { font-size: 18px; }
+.step { position: absolute; z-index: 6; font-size: 15px; }
+.arrow { position: absolute; z-index: 6; color: var(--muted); font: 700 30px 'Inter'; }
+ul.points { list-style: none; margin-top: 26px; display: grid; gap: 14px; font-size: 18px; color: var(--muted); }
+ul.points li { display: flex; gap: 12px; align-items: baseline; line-height: 1.35; }
+ul.points li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 2px; background: var(--c, var(--blue)); transform: translateY(-2px); }
+ul.points b { color: var(--text); font-weight: 600; }
+kbd { font: 600 0.85em 'JetBrains Mono', monospace; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--text); }

@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>universalMods gallery 2</title>
+<link rel="stylesheet" href="base.css"><link rel="stylesheet" href="ph.css">
+<style>
+  .head { right: auto; width: 440px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; }
+  .head h1 { font-size: 46px; }
+  .c-term { --c: var(--green); left: 520px; top: 92px; width: 700px; }
+  .c-term .crop { width: 700px; }
+  .tag { font-size: 14px; }
+  .t-term { --c: var(--green); left: 520px; top: 54px; }
+</style></head>
+<body><div class="stage">
+  <div class="head">
+    <div class="kicker" style="color:var(--green)">01 · Live terminals</div>
+    <h1>Every agent runs its real CLI, live.</h1>
+    <ul class="points" style="--c:var(--green)">
+      <li><span>The actual <b>claude</b> or <b>codex</b> TUI in a PTY, streamed to the browser</span></li>
+      <li><span>Click in to type, or <kbd>⌘↵</kbd> to <b>steer a running turn</b></span></li>
+      <li><span>Interrupt, hold or stop any agent, or <b>halt the whole floor</b></span></li>
+      <li><span>Status and token usage from the CLI's own hooks</span></li>
+    </ul>
+  </div>
+
+  <div class="card c-term"><div class="crop" data-src="layouts/mission.png" data-box="6,126,1004,866"></div></div>
+  <div class="tag t-term"><b>›_</b>?layout=mission <small>four agents, four live terminals</small></div>
+</div>
+<script src="crop.js"></script>
+</body></html>

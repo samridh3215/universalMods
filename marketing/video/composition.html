@@ -1,0 +1,625 @@
+<!doctype html>
+<!--
+  universalMods launch video, as a deterministic HTML animation.
+  Every frame is a pure function of time: window.seek(t) lays the page out for second t.
+  render.mjs drives headless Chrome through it frame by frame and pipes the frames to ffmpeg.
+  Open this file in a browser to preview it (it auto-plays; append #t=31 to jump).
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<title>universalMods demo</title>
+<script src="layouts.js"></script>
+<style>
+  :root {
+    --bg: #0b0b0d; --panel: #161618; --line: #2b2b29; --text: #f1f1ee; --muted: #a2a29b;
+    --blue: #6b9bff; --violet: #a48bf0; --pink: #f07aa8; --amber: #f0b74c; --teal: #2dc4b6; --ok: #34ad68;
+    --claude: #e8916f; --codex: #3cc79f;
+    --font: "SF Pro Display", system-ui, -apple-system, "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  #stage { position: absolute; inset: 0; overflow: hidden; }
+  .layer { position: absolute; inset: 0; overflow: hidden; display: none; }
+  .abs { position: absolute; }
+  /* Backdrop: soft brand-coloured glows and a faint grid. */
+  #bg .glow { position: absolute; width: 1100px; height: 1100px; border-radius: 50%; filter: blur(140px); opacity: .35; }
+  #bg .grid { position: absolute; inset: -200px; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 64px 64px; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65) 100%); pointer-events: none; }
+
+  /* Camera over a full-bleed UI capture. */
+  .cam { position: absolute; inset: 0; overflow: hidden; background: #111; }
+  .cam img { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+  .scrim { position: absolute; left: 0; right: 0; top: 0; height: 430px; background: linear-gradient(180deg, rgba(8,8,10,.94) 0%, rgba(8,8,10,.78) 45%, rgba(8,8,10,0) 100%); }
+  .scrim.bottom { top: auto; bottom: 0; transform: scaleY(-1); }
+
+  .caption { position: absolute; left: 96px; top: 70px; max-width: 1500px; }
+  .caption.bottom { top: auto; bottom: 74px; }
+  .tag { display: inline-flex; align-items: center; gap: 12px; font: 600 22px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--c, var(--blue)); }
+  .tag .n { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--c, var(--blue)); color: #0b0b0d; letter-spacing: 0; font-weight: 800; }
+  .headline { font-size: 76px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.04; margin-top: 18px; text-shadow: 0 4px 30px rgba(0,0,0,.6); }
+  .sub { font-size: 34px; font-weight: 500; color: #cfcfc8; margin-top: 16px; line-height: 1.3; text-shadow: 0 2px 16px rgba(0,0,0,.8); }
+  .hl { color: var(--c, var(--blue)); }
+  code.k { font-family: var(--mono); font-size: .9em; color: #fff; background: rgba(255,255,255,.1); padding: 2px 10px; border-radius: 8px; }
+
+  /* Logo */
+  .logo { position: relative; }
+  .logo i { position: absolute; border-radius: 22%; background: #ececea; }
+  .logo i.a { background: var(--blue); }
+
+  /* Cursor + click ripple */
+  #cursor { position: absolute; width: 44px; height: 44px; left: 0; top: 0; z-index: 50; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
+  #ripple { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; border: 4px solid var(--blue); z-index: 49; }
+
+  .chip { position: absolute; font: 600 26px/1 var(--mono); padding: 14px 20px; border-radius: 14px; background: rgba(18,18,22,.92); border: 2px solid var(--c); color: #fff; box-shadow: 0 10px 40px rgba(0,0,0,.5), 0 0 30px color-mix(in srgb, var(--c) 35%, transparent); white-space: nowrap; }
+  .chip b { color: var(--c); font-weight: 700; }
+
+  .codecard { position: absolute; width: 1100px; left: 410px; top: 400px; background: rgba(14,14,17,.96); border: 1px solid #34343a; border-radius: 20px; box-shadow: 0 40px 120px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.03); overflow: hidden; }
+  .codecard .bar { height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 22px; border-bottom: 1px solid #2a2a30; font: 500 20px var(--mono); color: #8c8c86; }
+  .codecard .bar span.d { width: 14px; height: 14px; border-radius: 50%; background: #3a3a40; }
+  .codecard pre { padding: 28px 34px 32px; font: 500 27px/1.55 var(--mono); color: #d8d8d2; white-space: pre; }
+  .tk-k { color: var(--violet); } .tk-s { color: var(--amber); } .tk-f { color: var(--blue); } .tk-c { color: #6f6f69; } .tk-p { color: var(--pink); }
+  .caret { display: inline-block; width: 14px; height: 30px; background: var(--blue); vertical-align: -5px; }
+
+  .toast { position: absolute; display: flex; align-items: center; gap: 16px; padding: 20px 28px; border-radius: 16px; background: rgba(16,30,22,.95); border: 2px solid var(--ok); font: 600 30px var(--font); box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .toast .ic { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--ok); color: #08130c; font-weight: 900; }
+  .toast code { font: 600 27px var(--mono); color: #b9f2cf; }
+
+  /* Montage */
+  .win { position: absolute; border-radius: 18px; overflow: hidden; background: #111; box-shadow: 0 50px 140px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.07); }
+  .win img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .mlabel { position: absolute; left: 96px; bottom: 74px; display: flex; flex-direction: column; gap: 10px; z-index: 5; }
+  .mlabel .cat { align-self: flex-start; font: 700 22px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; padding: 10px 14px; border-radius: 10px; background: var(--c); color: #0b0b0d; }
+  .mlabel .name { font-size: 84px; font-weight: 850; letter-spacing: -0.03em; line-height: 1; text-shadow: 0 6px 40px rgba(0,0,0,.9), 0 2px 6px rgba(0,0,0,.9); }
+  .mlabel .desc { font-size: 30px; font-weight: 500; color: #e2e2dc; text-shadow: 0 2px 14px rgba(0,0,0,.95); }
+  .counter { position: absolute; right: 96px; top: 70px; font: 700 26px var(--mono); color: #d6d6d0; letter-spacing: .1em; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,.9); }
+  .counter b { color: #fff; font-size: 40px; }
+  .flash { position: absolute; inset: 0; background: #fff; mix-blend-mode: overlay; pointer-events: none; z-index: 20; }
+  .mtitle { position: absolute; left: 96px; top: 70px; font: 700 26px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #d6d6d0; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,.9); }
+
+  .big { position: absolute; left: 0; right: 0; text-align: center; font-weight: 850; letter-spacing: -0.035em; }
+  .pillrow { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: 18px; }
+  .pill { font: 600 30px var(--font); padding: 14px 26px; border-radius: 999px; border: 2px solid var(--c); color: #fff; background: color-mix(in srgb, var(--c) 14%, #0b0b0d); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg" class="layer" style="display:block">
+    <div class="grid" id="bggrid"></div>
+    <div class="glow" id="g1" style="background:#6b9bff"></div>
+    <div class="glow" id="g2" style="background:#a48bf0"></div>
+    <div class="glow" id="g3" style="background:#f07aa8"></div>
+  </div>
+
+  <!-- HOOK -->
+  <div id="hook" class="layer">
+    <div id="hookwall" class="abs" style="left:-300px;top:-200px;width:2520px;height:1480px;"></div>
+    <div class="abs" id="hookdim" style="inset:0;background:radial-gradient(ellipse at center, rgba(11,11,13,.86) 0%, rgba(11,11,13,.8) 55%, rgba(11,11,13,.9) 100%);"></div>
+    <div class="logo abs" id="hooklogo" style="left:900px;top:250px;width:120px;height:120px;"></div>
+    <div class="big" id="hooktitle" style="top:410px;font-size:150px;"></div>
+    <div class="big" id="hookline" style="top:610px;font-size:50px;font-weight:600;letter-spacing:-0.01em;color:#dcdcd6;"></div>
+    <div class="pillrow" id="hookpills" style="top:730px;">
+      <span class="pill" style="--c:var(--codex)">Codex</span>
+      <span class="pill" style="--c:var(--claude)">Claude Code</span>
+      <span class="pill" style="--c:var(--violet)">in your browser</span>
+    </div>
+  </div>
+
+  <!-- BEAT 1: tiles + live terminal -->
+  <div id="b1" class="layer">
+    <div class="cam" id="b1a"><img id="b1aimg" src="captures/tiles.png" /></div>
+    <div class="cam" id="b1b"><img id="b1bimg" src="captures/terminal.png" /></div>
+    <div class="scrim bottom"></div>
+    <div class="caption bottom" style="--c:var(--blue)">
+      <div class="tag"><span class="n">1</span>How it works</div>
+      <div class="headline" id="b1h1">Every agent is a tile.</div>
+      <div class="sub" id="b1s1">Each one runs the <span class="hl">real</span> <code class="k">claude</code> or <code class="k">codex</code> CLI.</div>
+    </div>
+  </div>
+
+  <!-- BEAT 2: orchestrator + hive -->
+  <div id="b2" class="layer">
+    <div class="cam" id="b2a"><img id="b2aimg" src="captures/hive.png" /></div>
+    <div class="cam" id="b2b"><img id="b2bimg" src="captures/roadmap.png" /></div>
+    <div class="scrim"></div>
+    <div class="caption" style="--c:var(--violet)">
+      <div class="tag"><span class="n">2</span>The hive</div>
+      <div class="headline" id="b2h">A master <span class="hl">Orchestrator</span> plans and delegates.</div>
+      <div class="sub" id="b2s">It spawns teammates and hands out work through a shared kanban, plan board and messages.</div>
+    </div>
+    <div id="b2chips"></div>
+  </div>
+
+  <!-- BEAT 3: mods -->
+  <div id="b3" class="layer">
+    <div class="cam" id="b3a"><img id="b3aimg" src="captures/newmod-form.png" /></div>
+    <div class="cam" id="b3b"><img id="b3bimg" src="captures/newmod-cost.png" /></div>
+    <div class="scrim" id="b3scrim"></div>
+    <div class="abs" id="b3dim" style="inset:0;background:rgba(8,8,10,.72);"></div>
+    <div class="codecard" id="b3code">
+      <div class="bar"><span class="d"></span><span class="d"></span><span class="d"></span>&nbsp; mods/guard/server.ts</div>
+      <pre id="b3pre"></pre>
+    </div>
+    <div class="caption" id="b3cap" style="--c:var(--pink)">
+      <div class="tag"><span class="n">3</span>Mods</div>
+      <div class="headline" id="b3h"></div>
+      <div class="sub" id="b3s"></div>
+    </div>
+    <div class="toast" id="b3toast"><span class="ic">✓</span><span><code>cost-panel</code> hot-reloaded into the floor</span></div>
+  </div>
+
+  <!-- BRIDGE -->
+  <div id="bridge" class="layer">
+    <div class="big" id="brt" style="top:330px;font-size:150px;"></div>
+    <div class="pillrow" id="brpills" style="top:560px;">
+      <span class="pill" style="--c:var(--blue)">drag</span>
+      <span class="pill" style="--c:var(--violet)">dock</span>
+      <span class="pill" style="--c:var(--pink)">resize</span>
+      <span class="pill" style="--c:var(--amber)">collapse</span>
+      <span class="pill" style="--c:var(--teal)">save named layouts</span>
+    </div>
+  </div>
+
+  <!-- MONTAGE -->
+  <div id="mont" class="layer">
+    <div id="mwins" class="abs" style="inset:0;z-index:0"></div>
+    <div class="abs" style="left:0;right:0;bottom:0;height:420px;background:linear-gradient(0deg, rgba(8,8,10,.9) 0%, rgba(8,8,10,.6) 45%, rgba(8,8,10,0) 100%);z-index:4"></div>
+    <div class="abs" style="left:0;right:0;top:0;height:200px;background:linear-gradient(180deg, rgba(8,8,10,.75) 0%, rgba(8,8,10,0) 100%);z-index:4"></div>
+    <div class="mtitle">Layouts</div>
+    <div class="counter" id="mcount"></div>
+    <div class="mlabel" id="mlabel" style="--c:var(--blue)"><span class="cat" id="mcat"></span><span class="name" id="mname"></span><span class="desc" id="mdesc"></span></div>
+    <div class="flash" id="mflash"></div>
+  </div>
+
+  <!-- MOSAIC -->
+  <div id="mosaic" class="layer">
+    <div id="mosplane" class="abs" style="left:50%;top:50%;"></div>
+    <div class="abs" style="inset:0;background:radial-gradient(ellipse at center, rgba(8,8,10,.25) 0%, rgba(8,8,10,.7) 80%);"></div>
+    <div class="abs" id="mosband" style="left:0;right:0;top:360px;height:300px;background:linear-gradient(180deg, transparent, rgba(8,8,10,.82) 25%, rgba(8,8,10,.82) 75%, transparent)"></div>
+    <div class="big" id="most" style="top:400px;font-size:104px;"></div>
+    <div class="big" id="moss" style="top:540px;font-size:40px;font-weight:600;color:#dcdcd6;letter-spacing:-0.01em"></div>
+  </div>
+
+  <!-- OUTRO -->
+  <div id="outro" class="layer">
+    <div class="logo abs" id="outlogo" style="left:900px;top:215px;width:120px;height:120px;"></div>
+    <div class="big" id="outtitle" style="top:370px;font-size:120px;">universal<span style="color:var(--blue)">Mods</span></div>
+    <div class="big" id="outline" style="top:530px;font-size:42px;font-weight:600;letter-spacing:-0.01em;color:#dcdcd6">Open source · MIT · v0.3.0</div>
+    <div class="big" id="outurl" style="top:615px;font:600 46px var(--mono);letter-spacing:0;color:var(--blue)">github.com/samridh3215/universalMods</div>
+    <div class="pillrow" id="outpills" style="top:740px;">
+      <span style="font:600 30px var(--font);color:#cfcfc8;align-self:center">Works with</span>
+      <span class="pill" style="--c:var(--codex)">Codex</span>
+      <span style="font:600 30px var(--font);color:#cfcfc8;align-self:center">&amp;</span>
+      <span class="pill" style="--c:var(--claude)">Claude Code</span>
+    </div>
+  </div>
+
+  <div class="vignette"></div>
+  <svg id="cursor" viewBox="0 0 24 24"><path d="M3 2 L3 19 L7.5 14.8 L10.6 21.5 L13.6 20.2 L10.6 13.6 L16.8 13.6 Z" fill="#fff" stroke="#0b0b0d" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  <div id="ripple"></div>
+  <div class="abs" id="fade" style="inset:0;background:#0b0b0d;pointer-events:none;z-index:100"></div>
+</div>
+
+<script>
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const E = {
+  lin: (x) => x,
+  out: (x) => 1 - Math.pow(1 - x, 3),
+  in: (x) => x * x * x,
+  io: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  expo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
+  back: (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); },
+};
+/** Progress of t between t0 and t1, eased. */
+const pr = (t, t0, t1, e = E.io) => e(clamp((t - t0) / (t1 - t0)));
+/** Keyframes: [[t, v], ...] with easing between them. */
+function kf(t, keys, e = E.io) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    if (t <= keys[i][0]) {
+      const [t0, v0] = keys[i - 1], [t1, v1] = keys[i];
+      const k = e((t - t0) / (t1 - t0));
+      return Array.isArray(v0) ? v0.map((x, j) => lerp(x, v1[j], k)) : lerp(v0, v1, k);
+    }
+  }
+  return keys[keys.length - 1][1];
+}
+const show = (el, on) => (el.style.display = on ? 'block' : 'none');
+const css = (el, o) => Object.assign(el.style, o);
+
+function buildLogo(el) {
+  const s = el.offsetWidth || parseFloat(el.style.width);
+  const u = s / 24;
+  [[2, 2, ''], [14, 2, ''], [2, 14, ''], [14, 14, 'a']].forEach(([x, y, c]) => {
+    const i = document.createElement('i');
+    if (c) i.className = c;
+    css(i, { left: x * u + 'px', top: y * u + 'px', width: 8 * u + 'px', height: 8 * u + 'px' });
+    el.appendChild(i);
+  });
+}
+function letters(el, text) {
+  el.innerHTML = '';
+  [...text].forEach((ch) => { const s = document.createElement('span'); s.textContent = ch; s.style.display = 'inline-block'; if (ch === ' ') s.style.width = '0.28em'; el.appendChild(s); });
+  return [...el.children];
+}
+/** Point a full-bleed camera: (cx, cy) image-normalised centre, z = zoom over cover-fit. Returns a mapper image->screen. */
+function cam(img, cx, cy, z, W = 1920, H = 1080) {
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const s = Math.max(W / iw, H / ih) * z;
+  let tx = W / 2 - cx * iw * s, ty = H / 2 - cy * ih * s;
+  tx = clamp(tx, W - iw * s, 0); ty = clamp(ty, H - ih * s, 0);
+  img.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+  return (nx, ny) => [tx + nx * iw * s, ty + ny * ih * s];
+}
+function cursor(t, keys, clickAt) {
+  const c = $('cursor'), r = $('ripple');
+  if (!keys) { show(c, false); show(r, false); return; }
+  const [x, y, o] = kf(t, keys, E.io);
+  show(c, o > 0.01); css(c, { opacity: o, transform: `translate(${x - 8}px, ${y - 4}px) scale(${clickAt != null && t > clickAt && t < clickAt + 0.15 ? 0.85 : 1})` });
+  if (clickAt != null && t >= clickAt && t < clickAt + 0.6) {
+    const k = (t - clickAt) / 0.6;
+    show(r, true); css(r, { left: x + 'px', top: y + 'px', opacity: 1 - k, transform: `scale(${0.3 + k * 1.2})` });
+  } else show(r, false);
+}
+
+// ---------- timeline ----------
+const T = { hook: [0, 5.2], b1: [5.2, 12.6], b2: [12.6, 20.4], b3: [20.4, 30.5], bridge: [30.5, 33.1] };
+const L = (window.LAYOUTS || []).slice();
+const SLOT = 1.25;                     // seconds per layout in the montage
+T.mont = [T.bridge[1], T.bridge[1] + L.length * SLOT];
+T.mosaic = [T.mont[1], T.mont[1] + 3.4];
+T.outro = [T.mosaic[1], T.mosaic[1] + 5.4];
+const DURATION = T.outro[1];
+window.DURATION = DURATION;
+window.T = T;
+const CAT = { technical: 'var(--blue)', detail: 'var(--violet)', dashboard: 'var(--amber)', quirky: 'var(--pink)', minimal: 'var(--teal)' };
+
+// ---------- build DOM ----------
+buildLogo($('hooklogo')); buildLogo($('outlogo'));
+const titleSpans = letters($('hooktitle'), 'universalMods');
+titleSpans.forEach((s, i) => { if (i >= 9) s.style.color = 'var(--blue)'; });
+const lineSpans = (() => { const el = $('hookline'); el.innerHTML = ''; return 'Run a team of coding agents. Mod every part of it.'.split(' ').map((w) => { const s = document.createElement('span'); s.textContent = w + ' '; s.style.display = 'inline-block'; s.style.whiteSpace = 'pre'; if (w === 'Mod') s.style.color = 'var(--pink)'; el.appendChild(s); return s; }); })();
+const brSpans = letters($('brt'), 'Now make it yours.');
+const mosSpans = letters($('most'), 'One floor. Any layout.');
+
+// Hook backdrop wall + mosaic: tiles of every capture.
+const ALL = [...L.map((l) => l.file), 'captures/terminal.png', 'captures/newmod-cost.png', 'captures/hive.png', 'captures/roadmap.png'];
+(function wall() {
+  const wallEl = $('hookwall');
+  const cols = 5, w = 520, h = 325, gap = 26;
+  for (let i = 0; i < 20; i++) {
+    const im = document.createElement('img'); im.src = ALL[i % ALL.length];
+    css(im, { position: 'absolute', left: (i % cols) * (w + gap) + ((Math.floor(i / cols) % 2) * 120) + 'px', top: Math.floor(i / cols) * (h + gap) + 'px', width: w + 'px', height: h + 'px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '14px', opacity: .9 });
+    wallEl.appendChild(im);
+  }
+  const plane = $('mosplane');
+  const mc = 5, mr = 4;
+  const mw = 440, mh = 275, mg = 28;
+  css(plane, { width: mc * (mw + mg) + 'px', height: mr * (mh + mg) + 'px' });
+  Array.from({ length: mc * mr }, (_, i) => L[(i * 3) % L.length]).forEach((l, i) => {
+    const im = document.createElement('img'); im.src = l.file;
+    css(im, { position: 'absolute', left: (i % mc) * (mw + mg) + 'px', top: Math.floor(i / mc) * (mh + mg) + 'px', width: mw + 'px', height: mh + 'px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '16px', boxShadow: '0 30px 80px rgba(0,0,0,.6)' });
+    im.dataset.i = i;
+    plane.appendChild(im);
+  });
+})();
+const mwins = L.map((l) => {
+  const d = document.createElement('div'); d.className = 'win';
+  const im = document.createElement('img'); im.src = l.file; d.appendChild(im);
+  $('mwins').appendChild(d); return d;
+});
+
+// Delegation chips for beat 2 (hive MCP tools the orchestrator calls).
+const CHIPS = [
+  ['spawn_agent', 'Coder', 'var(--blue)'],
+  ['task_create', '"Wire Slack mod"', 'var(--violet)'],
+  ['send_message', '→ Pam', 'var(--pink)'],
+  ['board_write', 'plan.md', 'var(--amber)'],
+];
+const chipEls = CHIPS.map(([fn, arg, c]) => { const d = document.createElement('div'); d.className = 'chip'; d.style.setProperty('--c', c); d.innerHTML = `<b>hive.${fn}</b>(${arg})`; $('b2chips').appendChild(d); return d; });
+
+// Code for beat 3 (straight from MODDING.md, trimmed).
+const CODE = [
+  [['tk-k', 'export const '], ['tk-f', 'register'], ['', ' = (on) => {']],
+  [['', '  on('], ['tk-s', "'tool.call'"], ['', ', { tool: '], ['tk-p', '/^(Bash|shell)$/'], ['', ' }, ($, e, next) => {']],
+  [['tk-k', '    if '], ['', '(e.input.command.includes('], ['tk-s', "'prod'"], ['', '))']],
+  [['tk-k', '      return '], ['', "{ decision: "], ['tk-s', "'deny'"], ['', ', reason: '], ['tk-s', "'not on prod'"], ['', ' };']],
+  [['tk-k', '    return '], ['tk-f', 'next'], ['', '();'], ['tk-c', '            // or pass it on']],
+  [['', '  });']],
+  [['', '};']],
+];
+const codeLen = CODE.reduce((n, l) => n + l.reduce((m, [, s]) => m + s.length, 0) + 1, 0);
+function codeUpTo(n) {
+  let out = '', left = n;
+  for (const line of CODE) {
+    for (const [c, s] of line) { if (left <= 0) break; const part = s.slice(0, left); left -= part.length; out += c ? `<span class="${c}">${esc(part)}</span>` : esc(part); }
+    if (left <= 0) break; out += '\n'; left -= 1;
+  }
+  return out + '<span class="caret"></span>';
+}
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ---------- scenes ----------
+function bg(t) {
+  css($('g1'), { left: 200 + Math.sin(t * 0.35) * 260 + 'px', top: -300 + Math.cos(t * 0.27) * 160 + 'px' });
+  css($('g2'), { left: 1100 + Math.cos(t * 0.3) * 260 + 'px', top: 300 + Math.sin(t * 0.33) * 180 + 'px' });
+  css($('g3'), { left: 300 + Math.sin(t * 0.22 + 2) * 300 + 'px', top: 500 + Math.cos(t * 0.31) * 150 + 'px', opacity: 0.22 });
+  css($('bggrid'), { transform: `translate(${(t * 18) % 64}px, ${(t * 10) % 64}px)` });
+}
+
+function hook(t) {
+  const d = T.hook[1] - T.hook[0];
+  // Drifting wall of real layouts behind the title.
+  css($('hookwall'), { transform: `perspective(1600px) rotateX(18deg) rotateZ(-8deg) translate(${-t * 40}px, ${-t * 14}px) scale(${1.05 + t * 0.01})`, opacity: pr(t, 0, 1.2) * 0.9 });
+  const lg = $('hooklogo');
+  [...lg.children].forEach((sq, i) => {
+    const k = pr(t, 0.15 + i * 0.12, 0.65 + i * 0.12, E.back);
+    css(sq, { transform: `scale(${k}) rotate(${(1 - k) * 90}deg)`, opacity: clamp(k * 2) });
+  });
+  titleSpans.forEach((s, i) => {
+    const k = pr(t, 0.55 + i * 0.035, 1.15 + i * 0.035, E.out);
+    css(s, { transform: `translateY(${(1 - k) * 80}px)`, opacity: k, filter: `blur(${(1 - k) * 12}px)` });
+  });
+  lineSpans.forEach((s, i) => {
+    const k = pr(t, 1.6 + i * 0.09, 2.1 + i * 0.09, E.out);
+    css(s, { transform: `translateY(${(1 - k) * 30}px)`, opacity: k });
+  });
+  [...$('hookpills').children].forEach((p, i) => {
+    const k = pr(t, 2.8 + i * 0.12, 3.3 + i * 0.12, E.back);
+    css(p, { transform: `scale(${0.6 + 0.4 * k})`, opacity: clamp(k) });
+  });
+  // Exit: everything zooms through the camera.
+  const out = pr(t, d - 0.5, d, E.in);
+  css($('hook'), { transform: `scale(${1 + out * 0.5})`, opacity: 1 - out });
+}
+
+function captionIn(h, s, t, t0) {
+  const a = pr(t, t0, t0 + 0.55, E.out), b = pr(t, t0 + 0.15, t0 + 0.75, E.out);
+  css(h, { opacity: a, transform: `translateY(${(1 - a) * 30}px)` });
+  css(s, { opacity: b, transform: `translateY(${(1 - b) * 20}px)` });
+}
+
+function b1(t) {
+  const d = T.b1[1] - T.b1[0];
+  const A = $('b1aimg'), B = $('b1bimg');
+  const sw = 3.4; // switch to terminal
+  const ina = pr(t, 0, 0.5, E.out);
+  css($('b1'), { opacity: ina });
+  let map;
+  if (t < sw + 0.4) {
+    // Push in on the tile strip.
+    const [cx, cy, z] = kf(t, [[0, [0.5, 0.35, 1.0]], [1.2, [0.5, 0.35, 1.0]], [2.6, [0.17, 0.1, 2.3]], [sw + 0.4, [0.15, 0.1, 2.6]]]);
+    map = cam(A, cx, cy, z);
+  }
+  // Terminal: from tight on the table to a slow pan down.
+  const [cx, cy, z] = kf(t, [[sw, [0.15, 0.1, 2.6]], [sw + 1.4, [0.25, 0.56, 1.45]], [d, [0.62, 0.58, 1.4]]], E.io);
+  cam(B, cx, cy, z);
+  const k = pr(t, sw, sw + 0.35, E.out);
+  css($('b1b'), { opacity: k });
+  // Cursor: glide to the Orchestrator tile and click it (tile ~ (0.045, 0.072) in tiles.png).
+  if (map && t < sw + 0.3) {
+    const [tx, ty] = map(0.06, 0.112);
+    cursor(t, [[1.6, [1500, 900, 0]], [1.9, [1500, 900, 1]], [3.0, [tx, ty, 1]], [sw + 0.3, [tx, ty, 0]]], 3.05);
+  } else cursor(t, null);
+  // Captions.
+  const h = $('b1h1'), s = $('b1s1');
+  if (t < sw) {
+    h.textContent = 'Every agent is a tile.';
+    s.innerHTML = 'Each one runs the <span class="hl">real</span> <code class="k">claude</code> or <code class="k">codex</code> CLI.';
+    captionIn(h, s, t, 0.3);
+  } else {
+    h.textContent = 'Click one. Its live terminal fills the pane.';
+    s.innerHTML = 'Type straight into it, or queue the next message below.';
+    captionIn(h, s, t, sw + 0.1);
+  }
+  const out = pr(t, d - 0.35, d, E.in);
+  css($('b1'), { opacity: ina * (1 - out) });
+}
+
+function b2(t) {
+  const d = T.b2[1] - T.b2[0];
+  const A = $('b2aimg'), B = $('b2bimg');
+  const sw = 4.6;
+  const ina = pr(t, 0, 0.45, E.out);
+  // Hive: start on the orchestrator, sweep to kanban + agent graph.
+  const [ax, ay, az] = kf(t, [[0, [0.2, 0.45, 1.5]], [1.6, [0.25, 0.5, 1.45]], [3.6, [0.72, 0.42, 1.35]], [sw + 0.4, [0.75, 0.55, 1.4]]]);
+  const map = cam(A, ax, ay, az);
+  // Chips fly from the orchestrator panel toward the hive.
+  chipEls.forEach((c, i) => {
+    const t0 = 1.2 + i * 0.55;
+    const k = pr(t, t0, t0 + 0.45, E.out);
+    const ox = 1150, oy = 470 + i * 112;
+    const tx = 1250, ty = 470 + i * 112;
+    const vis = t > t0 && t < sw;
+    show(c, vis);
+    css(c, { left: lerp(ox, tx, k) + 'px', top: lerp(oy, ty, k) + 'px', opacity: clamp(k * 2) * (1 - pr(t, sw - 0.4, sw)), transform: `scale(${0.6 + 0.4 * E.back(clamp((t - t0) / 0.6))})` });
+  });
+  const [bx, by, bz] = kf(t, [[sw, [0.25, 0.35, 1.6]], [d, [0.45, 0.42, 1.35]]], E.out);
+  cam(B, bx, by, bz);
+  const k = pr(t, sw, sw + 0.4, E.out);
+  css($('b2b'), { opacity: k, transform: `translateX(${(1 - k) * 120}px)` });
+  const h = $('b2h'), s = $('b2s');
+  if (t < sw) {
+    h.innerHTML = 'A master <span class="hl">Orchestrator</span> plans and delegates.';
+    s.textContent = 'It spawns teammates and hands out work through the hive.';
+    captionIn(h, s, t, 0.3);
+  } else {
+    h.innerHTML = 'Agents share a <span class="hl">hive</span>.';
+    s.textContent = 'Kanban, plan board, roadmap and agent-to-agent messages, live.';
+    captionIn(h, s, t, sw + 0.1);
+  }
+  const out = pr(t, d - 0.35, d, E.in);
+  css($('b2'), { opacity: ina * (1 - out) });
+}
+
+function b3(t) {
+  const d = T.b3[1] - T.b3[0];
+  const A = $('b3aimg'), B = $('b3bimg');
+  const s1 = 3.8, s2 = 7.1; // code -> sentence -> cost panel
+  const ina = pr(t, 0, 0.45, E.out);
+  // Background camera: wide during code, then into the popover.
+  const [ax, ay, az] = kf(t, [[0, [0.5, 0.5, 1.05]], [s1, [0.55, 0.3, 1.15]], [s1 + 1.0, [0.78, 0.115, 1.95]], [s2 + 0.3, [0.8, 0.12, 2.1]]]);
+  const map = cam(A, ax, ay, az);
+  const dimk = 1 - pr(t, s1 - 0.2, s1 + 0.4);
+  css($('b3dim'), { opacity: 0.25 + 0.75 * dimk });
+  // Code card types itself.
+  const ck = pr(t, 0.2, 0.7, E.out);
+  const n = Math.floor(codeLen * pr(t, 0.6, s1 - 1.1, E.lin));
+  $('b3pre').innerHTML = codeUpTo(n);
+  css($('b3code'), { opacity: ck * dimk, transform: `translateY(${(1 - ck) * 40}px) scale(${0.96 + 0.04 * ck})` });
+  // Click "Build mod" (~ (0.9, 0.243) in newmod-form.png).
+  if (t > s1 + 0.8 && t < s2 + 0.3) {
+    const [bx, by] = map(0.9, 0.243);
+    cursor(t, [[s1 + 0.8, [bx - 420, by + 330, 0]], [s1 + 1.2, [bx - 420, by + 330, 1]], [s2 - 0.9, [bx, by, 1]], [s2 + 0.3, [bx, by, 0]]], s2 - 0.8);
+  } else cursor(t, null);
+  // After: the Cost panel the Mod Builder wrote.
+  const [cx, cy, cz] = kf(t, [[s2, [0.2, 0.8, 1.85]], [d, [0.2, 0.8, 1.6]]], E.out);
+  cam(B, cx, cy, cz);
+  const k = pr(t, s2 - 0.3, s2 + 0.1, E.out);
+  css($('b3b'), { opacity: k, filter: `brightness(${1 + (1 - pr(t, s2, s2 + 0.6)) * 0.6 * (t > s2 ? 1 : 0)})` });
+  const tk = pr(t, s2 + 0.5, s2 + 1.0, E.back);
+  css($('b3toast'), { right: '96px', top: lerp(-140, 84, tk) + 'px', opacity: clamp(tk * 1.5) });
+  const h = $('b3h'), s = $('b3s');
+  $('b3cap').classList.remove('bottom'); $('b3scrim').classList.remove('bottom');
+  if (t < s1) {
+    h.innerHTML = 'Everything is a <span class="hl">mod</span>.';
+    s.innerHTML = 'Views, tool guards, agent tools: a few lines of <code class="k">on(event, ($, e, next) =&gt; …)</code>';
+    captionIn(h, s, t, 0.3);
+  } else if (t < s2) {
+    $('b3cap').classList.add('bottom'); $('b3scrim').classList.add('bottom');
+    h.innerHTML = 'Or describe one in <span class="hl">a sentence</span>.';
+    s.textContent = 'A Mod Builder agent writes it and checks that it loads.';
+    captionIn(h, s, t, s1 + 0.1);
+  } else {
+    h.innerHTML = 'It <span class="hl">hot-reloads</span> straight in.';
+    s.textContent = 'This Cost panel was built from one sentence.';
+    captionIn(h, s, t, s2 + 0.1);
+  }
+  const out = pr(t, d - 0.35, d, E.in);
+  css($('b3'), { opacity: ina * (1 - out) });
+}
+
+function bridge(t) {
+  const d = T.bridge[1] - T.bridge[0];
+  brSpans.forEach((s, i) => {
+    const k = pr(t, 0.05 + i * 0.03, 0.5 + i * 0.03, E.out);
+    css(s, { transform: `translateY(${(1 - k) * 90}px) rotate(${(1 - k) * 8}deg)`, opacity: k });
+    if (i >= 12) s.style.color = 'var(--pink)';
+  });
+  [...$('brpills').children].forEach((p, i) => {
+    const k = pr(t, 0.7 + i * 0.1, 1.1 + i * 0.1, E.back);
+    css(p, { transform: `translateY(${(1 - k) * 30}px) scale(${0.7 + 0.3 * k})`, opacity: clamp(k) });
+  });
+  const out = pr(t, d - 0.3, d, E.in);
+  css($('bridge'), { transform: `scale(${1 + out * 0.8})`, opacity: 1 - out });
+}
+
+// Montage: each layout gets SLOT seconds with a rotating set of punchy entrances.
+const MOVES = ['whipL', 'punch', 'tiltR', 'whipU', 'spin', 'whipR', 'punch', 'tiltL'];
+function mont(t) {
+  const idx = Math.min(L.length - 1, Math.floor(t / SLOT));
+  const lt = t - idx * SLOT;
+  const W = 1520, H = 950;
+  mwins.forEach((w, i) => {
+    const rel = t - i * SLOT;                     // time since this one's slot began
+    const on = rel > -0.001 && rel < SLOT + 0.25;
+    show(w, on);
+    if (!on) return;
+    const k = pr(rel, 0, 0.32, E.expo);           // entrance
+    const o = pr(rel, SLOT - 0.02, SLOT + 0.14, E.in); // exit (overlaps the next entrance)
+    const drift = rel * 0.035;
+    let tx = 0, ty = 0, sc = 1 + drift, rz = 0, ry = 0, blur = 0;
+    const m = MOVES[i % MOVES.length];
+    if (m === 'whipL') { tx = (1 - k) * 2100; blur = (1 - k) * 30; }
+    if (m === 'whipR') { tx = -(1 - k) * 2100; blur = (1 - k) * 30; }
+    if (m === 'whipU') { ty = (1 - k) * 1300; blur = (1 - k) * 30; }
+    if (m === 'punch') { sc *= 1 + (1 - k) * 0.6; blur = (1 - k) * 20; }
+    if (m === 'tiltR') { ry = (1 - k) * -55; tx = (1 - k) * 900; }
+    if (m === 'tiltL') { ry = (1 - k) * 55; tx = -(1 - k) * 900; }
+    if (m === 'spin') { rz = (1 - k) * -14; sc *= 0.6 + 0.4 * k; }
+    // Settle into a gentle 3D pose that alternates per layout.
+    const pose = i % 2 ? 4 : -4;
+    ry += pose * k * (1 - o);
+    sc *= 1 - o * 0.12;
+    css(w, {
+      left: (1920 - W) / 2 + 'px', top: (1080 - H) / 2 + 50 + 'px', boxShadow: `0 50px 140px rgba(0,0,0,.75), 0 0 0 2px ${CAT[L[i].kind]}, 0 0 80px color-mix(in srgb, ${CAT[L[i].kind]} 35%, transparent)`, width: W + 'px', height: H + 'px',
+      transform: `perspective(2200px) translate(${tx}px, ${ty}px) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`,
+      filter: blur > 0.3 ? `blur(${blur}px)` : 'none', opacity: clamp(k * 3) * (1 - o), zIndex: i,
+    });
+  });
+  const l = L[idx];
+  if (!l) return;
+  const lab = $('mlabel');
+  lab.style.setProperty('--c', CAT[l.kind] || 'var(--blue)');
+  $('mcat').textContent = l.kind;
+  $('mname').textContent = l.label;
+  $('mdesc').textContent = l.desc || '';
+  const lk = pr(lt, 0.08, 0.36, E.out), lo = pr(lt, SLOT - 0.12, SLOT, E.in);
+  css(lab, { opacity: lk * (1 - lo), transform: `translateX(${(1 - lk) * -60}px)` });
+  $('mcount').innerHTML = `<b>${String(idx + 1).padStart(2, '0')}</b> / ${String(L.length).padStart(2, '0')}`;
+  css($('mflash'), { opacity: (1 - pr(lt, 0, 0.18, E.out)) * 0.5 * (idx > 0 ? 1 : 0.6) });
+  css($('mont'), { opacity: pr(t, 0, 0.15) });
+}
+
+function mosaic(t) {
+  const d = T.mosaic[1] - T.mosaic[0];
+  const plane = $('mosplane');
+  const z = kf(t, [[0, 1.7], [1.1, 1.02], [d, 0.95]], E.out);
+  css(plane, { transform: `translate(-50%, -50%) perspective(2400px) rotateX(${kf(t, [[0, 0], [1.3, 10]], E.out)}deg) rotateZ(${kf(t, [[0, 0], [1.3, -4]], E.out)}deg) scale(${z})` });
+  [...plane.children].forEach((im, i) => {
+    const k = pr(t, i * 0.035, 0.4 + i * 0.035, E.back);
+    css(im, { opacity: clamp(k * 2), transform: `scale(${0.7 + 0.3 * k})` });
+  });
+  mosSpans.forEach((s, i) => {
+    const k = pr(t, 0.9 + i * 0.025, 1.3 + i * 0.025, E.out);
+    css(s, { transform: `translateY(${(1 - k) * 60}px)`, opacity: k });
+    if (i >= 11) s.style.color = 'var(--amber)';
+  });
+  css($('mosband'), { opacity: pr(t, 0.7, 1.2) });
+  const sk = pr(t, 1.6, 2.1, E.out);
+  $('moss').textContent = 'Save as many named layouts as you like. Switch in one click.';
+  css($('moss'), { opacity: sk, transform: `translateY(${(1 - sk) * 20}px)` });
+  const out = pr(t, d - 0.35, d, E.in);
+  css($('mosaic'), { opacity: pr(t, 0, 0.2) * (1 - out) });
+}
+
+function outro(t) {
+  const d = T.outro[1] - T.outro[0];
+  [...$('outlogo').children].forEach((sq, i) => {
+    const k = pr(t, 0.05 + i * 0.1, 0.5 + i * 0.1, E.back);
+    css(sq, { transform: `scale(${k})`, opacity: clamp(k * 2) });
+  });
+  [['outtitle', 0.3], ['outline', 0.75], ['outurl', 1.0], ['outpills', 1.3]].forEach(([id, t0]) => {
+    const k = pr(t, t0, t0 + 0.5, E.out);
+    css($(id), { opacity: k, transform: `translateY(${(1 - k) * 30}px)` });
+  });
+}
+
+const SCENES = [['hook', hook], ['b1', b1], ['b2', b2], ['b3', b3], ['bridge', bridge], ['mont', mont], ['mosaic', mosaic], ['outro', outro]];
+window.seek = function (t) {
+  bg(t);
+  for (const [id, fn] of SCENES) {
+    const [a, b] = T[id];
+    const on = t >= a && t < b + (id === 'mont' ? 0.25 : 0);
+    show($(id), on);
+    if (on) fn(t - a);
+  }
+  if (!(t >= T.b1[0] && t < T.b1[1]) && !(t >= T.b3[0] && t < T.b3[1])) cursor(0, null);
+  // Fade in from / out to black.
+  css($('fade'), { opacity: Math.max(1 - pr(t, 0, 0.35), pr(t, DURATION - 0.6, DURATION)) });
+};
+window.ready = Promise.all([...document.images].map((im) => im.decode().catch(() => {})));
+
+// Preview mode: play in real time unless driven by the renderer.
+if (!navigator.webdriver && !location.search.includes('render')) {
+  const start = performance.now() - (parseFloat((location.hash.match(/t=([\d.]+)/) || [])[1]) || 0) * 1000;
+  const loop = () => { window.seek(((performance.now() - start) / 1000) % DURATION); requestAnimationFrame(loop); };
+  window.ready.then(loop);
+}
+</script>
+</body>
+</html>

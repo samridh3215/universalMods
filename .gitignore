@@ -5,3 +5,6 @@ data*/
 *.log
 .DS_Store
 .serena/
+
+# Large marketing renders live on GitHub Releases, not in git
+marketing/video/*.mp4

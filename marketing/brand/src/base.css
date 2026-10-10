@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=block');
+
+:root {
+  --bg: #0a0c11;
+  --bg2: #10131b;
+  --line: rgba(255, 255, 255, 0.09);
+  --text: #eef0f5;
+  --muted: #9aa3b5;
+  --blue: #6b9bff;
+  --violet: #a48bf0;
+  --pink: #f07aa8;
+  --amber: #f0b74c;
+  --green: #5fd38d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: var(--W);
+  height: var(--H);
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background: glows + faint dot grid */
+.stage {
+  position: relative;
+  width: var(--W);
+  height: var(--H);
+  overflow: hidden;
+  background:
+    radial-gradient(60% 70% at 12% 0%, rgba(107, 155, 255, 0.22), transparent 60%),
+    radial-gradient(50% 60% at 95% 10%, rgba(164, 139, 240, 0.20), transparent 60%),
+    radial-gradient(55% 60% at 80% 110%, rgba(240, 122, 168, 0.16), transparent 60%),
+    var(--bg);
+}
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(80% 80% at 50% 40%, #000 30%, transparent 85%);
+  pointer-events: none;
+}
+
+.grad {
+  background: linear-gradient(92deg, var(--blue) 0%, var(--violet) 50%, var(--pink) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Brand lockup */
+.brand { display: flex; align-items: center; gap: 0.45em; font-weight: 800; letter-spacing: -0.02em; }
+.brand .mark { width: 1.15em; height: 1.15em; display: block; }
+.brand .word b { font-weight: 800; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 0.45em;
+  padding: 0.38em 0.85em; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04);
+  color: var(--muted); font-weight: 600; white-space: nowrap;
+}
+.pill i { width: 0.55em; height: 0.55em; border-radius: 50%; display: inline-block; font-style: normal; }
+
+/* App window frame */
+.window {
+  position: absolute;
+  border-radius: 14px;
+  background: #0d0f14;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 40px 120px -20px rgba(0, 0, 0, 0.85),
+    0 0 120px -10px rgba(107, 155, 255, 0.28);
+  overflow: hidden;
+}
+.window .bar {
+  height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 12px;
+  background: #151821; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.window .bar span { width: 11px; height: 11px; border-radius: 50%; background: #3a3f4b; }
+.window .bar span:nth-child(1) { background: #ff5f57; }
+.window .bar span:nth-child(2) { background: #febc2e; }
+.window .bar span:nth-child(3) { background: #28c840; }
+.window .bar em {
+  margin-left: 14px; flex: 0 1 360px; height: 18px; border-radius: 6px; background: #0d0f14;
+  color: #6e778a; font: 500 10px/18px 'JetBrains Mono', monospace; font-style: normal; padding: 0 10px;
+}
+
+/* Crop of a screenshot: data-src, data-box="x,y,w,h" in app CSS px (1600x1000 viewport) */
+.crop { position: relative; overflow: hidden; background: #0d0f14; }
+.crop img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; }
+
+/* Floating callout card */
+.card {
+  position: absolute;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.9),
+    0 0 60px -12px color-mix(in srgb, var(--c) 55%, transparent);
+  overflow: hidden;
+  background: #0d0f14;
+}
+.tag {
+  position: absolute; z-index: 5;
+  display: inline-flex; align-items: center; gap: 0.5em;
+  padding: 0.42em 0.95em 0.42em 0.45em; border-radius: 999px;
+  background: rgba(14, 16, 22, 0.92);
+  border: 1px solid color-mix(in srgb, var(--c) 60%, transparent);
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.8);
+  font-weight: 700; white-space: nowrap; color: var(--text);
+}
+.tag b {
+  display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%;
+  background: var(--c); color: #0a0c11; font-weight: 800; font-size: 0.85em;
+}
+.tag small { color: var(--muted); font-weight: 500; font-size: 0.86em; }
+
+.kicker {
+  font: 700 0.8em 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase;
+}

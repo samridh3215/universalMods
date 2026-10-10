@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Refresh docs/screenshots/*.png from a running floor (used by the README and GitHub Pages).
-//   UM_TOKEN=<token> npm run screenshots          (default URL http://127.0.0.1:4477)
+// Capture the source screenshots for the marketing compositions (same shots as scripts/screenshots.mjs,
+// written next to this file as shot-*.png). Then run ./render.sh.
+//   UM_TOKEN=<token> node marketing/brand/src/capture.mjs   (default URL http://127.0.0.1:4477)
 // Drives headless Chrome over the DevTools protocol so each shot can use its own layout,
 // colour scheme and UI state. Needs Google Chrome (override with CHROME=/path/to/chrome).
 import { spawn } from 'node:child_process';
@@ -10,8 +11,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import WebSocket from 'ws';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'docs/screenshots');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const OUT = path.dirname(fileURLToPath(import.meta.url));
 const URL_ = process.env.UM_URL ?? 'http://127.0.0.1:4477';
 const TOKEN = process.env.UM_TOKEN;
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -32,10 +33,10 @@ const openNewMod = `(async () => {
 })()`;
 
 const shots = [
-  { file: 'floor.png', layout: 'showcase', scheme: 'dark' },
-  { file: 'roadmap-light.png', layout: 'showcase', scheme: 'light' },
+  { file: 'shot-floor.png', layout: 'showcase', scheme: 'dark' },
+  { file: 'shot-light.png', layout: 'showcase', scheme: 'light' },
   {
-    file: 'roadmap.png',
+    file: 'shot-newmod.png',
     layout: 'newmod',
     scheme: 'dark',
     custom: [
@@ -60,7 +61,7 @@ const shots = [
 const only = process.env.SHOTS?.split(',').filter(Boolean);
 const selected = only ? shots.filter((s) => only.some((o) => s.file.startsWith(o))) : shots;
 
-const port = 9333;
+const port = 9334;
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'um-shots-'));
 const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
 

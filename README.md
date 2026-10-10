@@ -2,10 +2,14 @@
 
 [![Release](https://img.shields.io/github/v/release/samridh3215/universalMods?sort=semver)](https://github.com/samridh3215/universalMods/releases) [![CI](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml/badge.svg)](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml) [![Plugin Security Scan](https://github.com/samridh3215/universalMods/actions/workflows/plugin-scan.yml/badge.svg)](https://github.com/samridh3215/universalMods/actions/workflows/plugin-scan.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Claude-Code-style **mods** plus a web **floor** for running and steering many agents, on either platform:
+![universalMods: run a team of coding agents. Mod everything.](marketing/brand/hero.png)
 
-- **Claude Code**: one long-lived `claude -p` stream-json process per agent.
-- **Codex**: one `codex app-server` (JSON-RPC) per agent.
+<p align="center"><img src="marketing/video/universalmods-demo.gif" alt="universalMods in 12 seconds: a montage of layouts" width="720"><br><sub>▶ Full 54-second demo: <a href="https://github.com/samridh3215/universalMods/releases/download/v0.3.0/universalmods-demo.mp4">universalmods-demo.mp4</a></sub></p>
+
+**Run a team of coding agents. Mod everything.** universalMods is an open-source, local web floor where a master **Orchestrator** plans and delegates to a team of **Codex** or **Claude Code** agents, each running its real CLI in a live browser terminal, and where every view, guard and workflow is a Claude-Code-style hot-reloading **mod** you can even generate from one sentence.
+
+- **Claude Code**: each agent runs the real `claude` TUI in a live terminal (or headless `claude -p` stream-json with `--agent-mode stream`).
+- **Codex**: each agent runs the real `codex` TUI in a live terminal (or `codex app-server` JSON-RPC in stream mode).
 
 > 🚧 **Multiple agent providers support coming soon.**
 >
@@ -23,8 +27,21 @@ Inspired by [Munder Difflin](https://github.com/HarnessMD/munder-difflin) (agent
 
 ![The roadmap flowchart, a Cost panel mod written by the Mod Builder agent from one sentence, and the New mod form](docs/screenshots/roadmap.png)
 
-<details><summary>Light mode</summary>
+### One floor, many layouts
 
+Built-in layouts (open any with `&layout=<name>`), or drag panes to build your own:
+
+| `mission` | `dashboard` |
+|---|---|
+| ![mission: four agents' live terminals with timeline and cost](docs/screenshots/layouts/mission.png) | ![dashboard: clock, cost, agent graph, kanban and timeline](docs/screenshots/layouts/dashboard.png) |
+| **`arcade`** | **`zen`** |
+| ![arcade: giant clock and agent graph centre stage](docs/screenshots/layouts/arcade.png) | ![zen: agent tiles and one terminal, everything else folded away](docs/screenshots/layouts/zen.png) |
+
+<details><summary>More: deepdive, planner, light mode</summary>
+
+![deepdive](docs/screenshots/layouts/deepdive.png)
+![planner](docs/screenshots/layouts/planner.png)
+![planner (light)](docs/screenshots/layouts/planner-light.png)
 ![Showcase layout in light mode](docs/screenshots/roadmap-light.png)
 
 </details>
@@ -59,7 +76,7 @@ Requirements:
 | "Needs you" tray | Shows `ask_user` questions. The agent blocks until you answer |
 | Floor controls | Halt/resume the whole floor, `/broadcast` (status mod), status line with token and $ totals |
 | Roadmap | A live Mermaid flowchart (Shipped → Now → Next → Later, with dependency arrows) or a board. A PM agent drafts it from a brief, and progress moves as kanban tasks tagged `[R3]` get done |
-| Workspace | LeetCode-style panes: drag dividers to resize, drag a pane by its header onto another pane's edge to dock it (or its centre to swap), collapse panes to their title bar (a fully collapsed column folds into a strip), maximize any pane. **+ Panel** adds a view. Save named layouts (`ops`, `plan`, `focus`, `roadmap`, `showcase` built in) and open one with `?layout=<name>` |
+| Workspace | LeetCode-style panes: drag dividers to resize, drag a pane by its header onto another pane's edge to dock it (or its centre to swap), collapse panes to their title bar (a fully collapsed column folds into a strip), maximize any pane. **+ Panel** adds a view. Save named layouts (`ops`, `plan`, `focus`, `roadmap`, `showcase`, `mission`, `deepdive`, `dashboard`, `planner`, `arcade`, `zen` built in) and open one with `?layout=<name>` |
 | Mods & skills | In the top bar (🧩), not in a pane: toggle mods, run mod commands, browse skills |
 | No limits | Claude uses `bypassPermissions`. Codex uses `danger-full-access` and approval `never`. Guards are opt-in mods |
 
