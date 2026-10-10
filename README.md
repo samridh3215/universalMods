@@ -1,6 +1,6 @@
 # universalMods
 
-[![Release](https://img.shields.io/github/v/release/samridh3215/universalMods?sort=semver)](https://github.com/samridh3215/universalMods/releases) [![CI](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml/badge.svg)](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/samridh3215/universalMods?sort=semver)](https://github.com/samridh3215/universalMods/releases) [![CI](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml/badge.svg)](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml) [![Plugin Security Scan](https://github.com/samridh3215/universalMods/actions/workflows/plugin-scan.yml/badge.svg)](https://github.com/samridh3215/universalMods/actions/workflows/plugin-scan.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Claude-Code-style **mods** plus a web **floor** for running and steering many agents, on either platform:
 

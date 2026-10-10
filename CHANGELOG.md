@@ -8,6 +8,7 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 
 ### Security
 - Added `SECURITY.md` (reporting + security model), Dependabot for npm and GitHub Actions, and pinned workflow actions to commit SHAs; CI runs with read-only permissions.
+- Plugin security scan workflow (HOL `ai-plugin-scanner-action`) on every push and pull request.
 
 ## [0.3.0] - 2026-10-10
 
