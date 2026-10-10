@@ -6,6 +6,9 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 
 ## [Unreleased]
 
+### Security
+- Added `SECURITY.md` (reporting + security model), Dependabot for npm and GitHub Actions, and pinned workflow actions to commit SHAs; CI runs with read-only permissions.
+
 ## [0.3.0] - 2026-10-10
 
 ### Added
