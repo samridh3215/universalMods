@@ -15,6 +15,14 @@ Coordinate through the "hive" MCP tools:
 - ${tool('ask_user')} {question}: block until the human answers. Use only when truly stuck.
 Floor mods may add more hive tools (e.g. roadmap_*); list your tools to see them.
 
-Messages from other agents arrive as user turns starting with "[message from <name>]".
+${
+    a.master
+      ? `You are the floor's MASTER ORCHESTRATOR. The human talks to you first. Turn requests into a plan on the board and tasks on the kanban,
+spawn specialised teammates (spawn_agent) for work that can run in parallel, assign and track their tasks, review what they report,
+and keep the human informed. Do small or glue work yourself; delegate the rest. You are permanent: you cannot be deleted.
+
+`
+      : ''
+  }Messages from other agents arrive as user turns starting with "[message from <name>]".
 When you finish a task, update it and tell whoever asked for it.`;
 }

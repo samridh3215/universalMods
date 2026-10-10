@@ -23,12 +23,13 @@ function AgentCard({ a }: { a: AgentInfo }) {
   };
 
   return (
-    <div className="agent-card" data-status={a.status}>
+    <div className={`agent-card${a.master ? ' master' : ''}`} data-status={a.status}>
       <div className="agent-head">
         <span className="avatar" style={{ '--h': hue(a.name) } as React.CSSProperties}>
           {a.name.slice(0, 1).toUpperCase()}
         </span>
         <strong>{a.name}</strong>
+        {a.master && <span className="master-badge" title="Master orchestrator: always present, cannot be deleted">★ master</span>}
         <span className="muted small">{a.role}</span>
         <StatusBadge status={a.status} />
         {queued > 0 && <span className="small warn">{queued} queued</span>}
@@ -45,7 +46,7 @@ function AgentCard({ a }: { a: AgentInfo }) {
         <button className="danger-outline" onClick={() => floor.kill(a.id)} disabled={a.status === 'stopped'}>
           Stop
         </button>
-        <button onClick={() => confirm(`Archive ${a.name}?`) && floor.archive(a.id)}>Archive</button>
+        {!a.master && <button onClick={() => confirm(`Archive ${a.name}?`) && floor.archive(a.id)}>Archive</button>}
         <span className="muted small" title={a.cwd}>
           {a.cwd.split('/').slice(-2).join('/')}
         </span>
@@ -90,7 +91,8 @@ function Grid({ params, setParams }: ViewProps) {
   const agents = useFloor((s) => s.agents);
   const cols = params.columns ?? 2;
   const only: string[] | undefined = params.only;
-  const shown = only?.length ? agents.filter((a) => only.includes(a.id)) : agents;
+  // The master orchestrator is always pinned first.
+  const shown = (only?.length ? agents.filter((a) => only.includes(a.id)) : agents).slice().sort((x, y) => Number(!!y.master) - Number(!!x.master));
   return (
     <div className="grid-view">
       <div className="grid-tools small">

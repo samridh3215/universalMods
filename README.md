@@ -44,6 +44,7 @@ Requirements:
 
 | Feature | Details |
 |---|---|
+| Master orchestrator | Every floor starts with a permanent **Orchestrator** agent (pinned first, cannot be deleted) that plans, spawns and coordinates the rest. `--workspace <dir>` sets its working directory |
 | Spawning | Click the **+** tile in the agent grid. Set name, role, model, effort, working dir or its own **git worktree**, skills and a first prompt |
 | Agent grid | Live stream per agent. **Send** queues the next turn. **⌘/Ctrl+Enter steers** the running turn. Also Interrupt / Hold / Stop / Archive |
 | Hive (shared by agents and you) | Kanban, plan board and messages, exposed to every agent as `hive` MCP tools: `list_agents`, `send_message`, `spawn_agent`, `task_*`, `board_*`, `ask_user` |
@@ -51,7 +52,8 @@ Requirements:
 | "Needs you" tray | Shows `ask_user` questions. The agent blocks until you answer |
 | Floor controls | Halt/resume the whole floor, `/broadcast` (status mod), status line with token and $ totals |
 | Roadmap | A live Mermaid flowchart (Shipped → Now → Next → Later, with dependency arrows) or a board. A PM agent drafts it from a brief, and progress moves as kanban tasks tagged `[R3]` get done |
-| Layouts | Panes of any view in columns. Split, close and switch views, then save named layouts (`ops`, `plan`, `focus`, `roadmap` built in). Open one directly with `?layout=<name>` |
+| Workspace | LeetCode-style panes: drag dividers to resize, drag a pane by its header onto another pane's edge to dock it (or its centre to swap), collapse panes to their title bar (a fully collapsed column folds into a strip), maximize any pane. **+ Panel** adds a view. Save named layouts (`ops`, `plan`, `focus`, `roadmap` built in) and open one with `?layout=<name>` |
+| Mods & skills | In the top bar (🧩), not in a pane: toggle mods, run mod commands, browse skills |
 | No limits | Claude uses `bypassPermissions`. Codex uses `danger-full-access` and approval `never`. Guards are opt-in mods |
 
 ## Platform config

@@ -24,6 +24,8 @@ export interface FloorOptions {
   modDirs: string[];
   url: string;
   token: string;
+  /** Default working directory for the master orchestrator (`--workspace`). */
+  workspace?: string;
   broadcast: (msg: Record<string, unknown>) => void;
   log?: (...a: unknown[]) => void;
 }
@@ -93,6 +95,13 @@ export class Floor {
   async boot() {
     await this.runtime.loadAll();
     this.runtime.watch();
+    await this.ensureMaster();
+  }
+
+  /** Every floor has exactly one master orchestrator; recreate it if it is missing. */
+  async ensureMaster() {
+    if (this.list().some((a) => a.master)) return;
+    await this.spawn({ name: 'Orchestrator', role: 'master orchestrator', cwd: this.o.workspace }, 'floor', { master: true });
   }
 
   skills() {
@@ -127,7 +136,7 @@ export class Floor {
     void this.bus.emit('agent.status', { agent: a, status, prev }, () => undefined);
   }
 
-  spawn(spec: SpawnSpec, by = 'user'): Promise<AgentInfo> {
+  spawn(spec: SpawnSpec, by = 'user', opts: { master?: boolean } = {}): Promise<AgentInfo> {
     return this.bus.emit('agent.spawn', { spec, by }, async ({ spec }) => {
       const base = (spec.name ?? `agent-${this.hive.agents.size + 1}`).trim();
       const id = `${base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'agent'}-${randomUUID().slice(0, 4)}`;
@@ -149,6 +158,7 @@ export class Floor {
         turns: 0,
         held: false,
         skills: spec.skills ?? [],
+        ...(opts.master ? { master: true } : {}),
       };
       this.hive.agents.set(id, agent);
       this.hive.log('spawn', { id, by, spec });
@@ -317,6 +327,7 @@ export class Floor {
 
   async archive(id: string) {
     const a = this.must(id);
+    if (a.master) throw new Error(`${a.name} is the master orchestrator and cannot be deleted`);
     await this.kill(a.id);
     a.archived = true;
     this.touch(a);

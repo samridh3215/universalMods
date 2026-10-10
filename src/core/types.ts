@@ -28,6 +28,8 @@ export interface AgentInfo {
   skills: string[];
   lastActivity?: string;
   archived?: boolean;
+  /** The floor's master orchestrator: always present, cannot be archived. */
+  master?: boolean;
 }
 
 export interface SpawnSpec {

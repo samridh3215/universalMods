@@ -1,23 +1,24 @@
 // The shell is deliberately thin: setup screen, top bar, a pane layout that
 // hosts views registered by mods, toasts and the "needs you" question tray.
-import { Component, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { Component, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { _internal, floor, useFloor, type ViewDef } from './mod-api.ts';
 import { api, refresh, setToken } from './store.ts';
-import { builtinViews } from './builtin-views.tsx';
+import { ModsPanel, builtinViews } from './builtin-views.tsx';
+import { fromViews, normalize, Workspace, type Layout } from './layout.tsx';
 
-type Pane = { view: string; params?: Record<string, any> };
-type Layout = Pane[][];
-
+// Built-in layouts. Users rearrange them freely; changes are saved per layout name.
 const PRESETS: Record<string, Layout> = {
-  ops: [[{ view: 'mods' }], [{ view: 'grid' }], [{ view: 'timeline' }]],
-  plan: [[{ view: 'kanban' }], [{ view: 'board' }, { view: 'timeline' }]],
-  focus: [[{ view: 'grid', params: { columns: 1 } }]],
-  roadmap: [[{ view: 'roadmap', params: { mode: 'flow' } }], [{ view: 'grid', params: { columns: 1 } }, { view: 'timeline' }]],
+  ops: fromViews([['grid'], ['timeline']]),
+  plan: fromViews([['kanban'], ['board', 'timeline']]),
+  focus: fromViews([[{ view: 'grid', params: { columns: 1 } }]]),
+  roadmap: fromViews([[{ view: 'roadmap', params: { mode: 'flow' } }], [{ view: 'grid', params: { columns: 1 } }, 'kanban']]),
 };
 
 function loadLayouts(): Record<string, Layout> {
   try {
-    return { ...PRESETS, ...JSON.parse(localStorage.getItem('um.layouts') ?? '{}') };
+    const saved = JSON.parse(localStorage.getItem('um.layouts') ?? '{}') as Record<string, unknown>;
+    const custom = Object.fromEntries(Object.entries(saved).map(([k, v]) => [k, normalize(v)]).filter(([, v]) => (v as Layout).length));
+    return { ...PRESETS, ...custom };
   } catch {
     return { ...PRESETS };
   }
@@ -129,12 +130,7 @@ function Shell() {
     setLayouts(all);
     saveLayouts(all);
   };
-  const setPane = (c: number, p: number, pane: Pane | null) => {
-    const next = layout.map((col) => [...col]);
-    if (pane) next[c][p] = pane;
-    else next[c].splice(p, 1);
-    update(next.filter((col) => col.length));
-  };
+  const addPanel = (view: string) => update([...layout, ...fromViews([[view]])]);
 
   return (
     <div className="shell">
@@ -142,7 +138,7 @@ function Shell() {
         <strong className="topbar-brand"><img src="/logo.svg" alt="" /> universalMods</strong>
         <span className={`pill ${s.provider}`}>{s.provider}</span>
         <span className={`dot ${s.connected ? 'on' : 'off'}`} title={s.connected ? 'connected' : 'reconnecting'} />
-        <select value={name} onChange={(e) => setName(e.target.value)}>
+        <select value={name} onChange={(e) => setName(e.target.value)} title="Layout">
           {Object.keys(layouts).map((k) => (
             <option key={k}>{k}</option>
           ))}
@@ -159,10 +155,15 @@ function Shell() {
         >
           Save as…
         </button>
-        <button onClick={() => update([...layout, [{ view: 'grid' }]])}>+ column</button>
-        {name in PRESETS && JSON.stringify(layout) !== JSON.stringify(PRESETS[name]) && (
-          <button onClick={() => update(PRESETS[name])}>reset</button>
-        )}
+        <select value="" onChange={(e) => e.target.value && addPanel(e.target.value)} title="Add a panel">
+          <option value="">+ Panel</option>
+          {[...views.values()].map((v) => (
+            <option key={v.id} value={v.id}>
+              {v.title}
+            </option>
+          ))}
+        </select>
+        {name in PRESETS && JSON.stringify(layout) !== JSON.stringify(PRESETS[name]) && <button onClick={() => update(PRESETS[name])}>reset</button>}
         {toolbar.map((t) => (
           <span key={t.id}>{t.render()}</span>
         ))}
@@ -173,50 +174,25 @@ function Shell() {
           </span>
         ))}
         {!s.check?.ok && <span className="bad">{s.check?.error}</span>}
+        <ModsButton />
         <button className={s.halted ? 'danger' : 'danger-outline'} onClick={() => floor.halt(!s.halted)}>
           {s.halted ? 'Resume floor' : 'Halt floor'}
         </button>
       </header>
       <Questions />
-      <main className="layout">
-        {layout.map((col, c) => (
-          <div className="column" key={c}>
-            {col.map((pane, p) => {
-              const v = views.get(pane.view);
-              return (
-                <section className="pane" key={p}>
-                  <div className="pane-head">
-                    <select value={pane.view} onChange={(e) => setPane(c, p, { view: e.target.value })}>
-                      {!v && <option value={pane.view}>{pane.view} (not loaded)</option>}
-                      {[...views.values()].map((x) => (
-                        <option key={x.id} value={x.id}>
-                          {x.title}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="spacer" />
-                    <button title="split below" onClick={() => update(layout.map((col2, i) => (i === c ? [...col2.slice(0, p + 1), { view: pane.view }, ...col2.slice(p + 1)] : col2)))}>
-                      ⊟
-                    </button>
-                    <button title="close pane" onClick={() => setPane(c, p, null)}>
-                      ×
-                    </button>
-                  </div>
-                  <div className="pane-body">
-                    {v ? (
-                      <ErrorBoundary key={`${v.id}:${s.mods.find((m) => m.id === v.mod)?.version ?? 0}`}>
-                        {v.render({ params: pane.params ?? {}, setParams: (params) => setPane(c, p, { ...pane, params }) })}
-                      </ErrorBoundary>
-                    ) : (
-                      <div className="muted pad">View “{pane.view}” is not registered. Enable its mod in the Mods view.</div>
-                    )}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        ))}
-      </main>
+      <Workspace
+        layout={layout}
+        onChange={update}
+        views={views}
+        renderBody={(pane, setParams) => {
+          const v = views.get(pane.view);
+          return v ? (
+            <ErrorBoundary key={`${v.id}:${s.mods.find((m) => m.id === v.mod)?.version ?? 0}`}>{v.render({ params: pane.params ?? {}, setParams })}</ErrorBoundary>
+          ) : (
+            <div className="muted pad">View “{pane.view}” is not registered. Enable its mod from the Mods menu.</div>
+          );
+        }}
+      />
       <div className="toasts">
         {s.toasts.map((t) => (
           <div key={t.id} className={`toast ${t.level}`}>
@@ -224,6 +200,34 @@ function Shell() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Mods & skills live in a top-bar pop-over instead of taking pane space. */
+function ModsButton() {
+  const [open, setOpen] = useState(false);
+  const mods = useFloor((s) => s.mods);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => (document.removeEventListener('mousedown', close), document.removeEventListener('keydown', esc));
+  }, [open]);
+  const errors = mods.filter((m) => m.error).length;
+  return (
+    <div className="popover-wrap" ref={ref}>
+      <button className={open ? 'active' : ''} onClick={() => setOpen(!open)}>
+        🧩 Mods & skills {errors > 0 && <span className="badge-err">{errors}</span>}
+      </button>
+      {open && (
+        <div className="popover">
+          <ModsPanel />
+        </div>
+      )}
     </div>
   );
 }

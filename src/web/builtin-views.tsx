@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { floor, useFloor, type ViewDef } from './mod-api.ts';
 
-function ModsView() {
+/** Mods, commands and skills; shown in the top-bar pop-over. */
+export function ModsPanel() {
   const mods = useFloor((s) => s.mods);
   const skills = useFloor((s) => s.skills);
   const commands = useFloor((s) => s.commands);
@@ -87,6 +88,5 @@ function ConfigView({ params, setParams }: { params: Record<string, any>; setPar
 }
 
 export const builtinViews: ViewDef[] = [
-  { id: 'mods', title: 'Mods & skills', render: () => <ModsView /> },
   { id: 'config', title: 'Agent config', render: (p) => <ConfigView {...p} /> },
 ];
