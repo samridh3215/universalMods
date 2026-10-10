@@ -360,3 +360,5 @@ body.resizing .pane-body, body.resizing-row .pane-body { pointer-events: none; }
 .kanban-card { cursor: grab; }
 .kanban-card:active { cursor: grabbing; }
 .kanban-card.dragging { opacity: .4; }
+.version { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 7px; text-decoration: none; font-family: var(--mono); }
+.version:hover { color: var(--accent); border-color: var(--accent); }

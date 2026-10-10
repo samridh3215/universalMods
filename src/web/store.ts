@@ -18,6 +18,7 @@ export interface FloorState {
   authError?: string;
   setup?: { dataDir: string; checks: Record<string, { ok: boolean; version?: string; error?: string }> };
   provider?: 'claude' | 'codex';
+  version?: string;
   check?: { ok: boolean; version?: string; error?: string };
   halted: boolean;
   connected: boolean;
@@ -138,6 +139,7 @@ export async function refresh() {
     authError: undefined,
     setup: undefined,
     provider: s.floor.provider,
+    version: s.floor.version,
     check: s.floor.check,
     halted: s.floor.halted,
     agents: s.agents,

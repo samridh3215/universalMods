@@ -1,6 +1,6 @@
 {
   "name": "universal-mods",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Claude-Code-style mods + a web control floor for Codex or Claude CLI agents",
@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && tsx src/server/build-check.ts",
     "test": "vitest run",
     "postinstall": "node -e \"const fs=require('fs'),p=require('path');const r=p.join('node_modules','node-pty','prebuilds');if(fs.existsSync(r))for(const d of fs.readdirSync(r)){const f=p.join(r,d,'spawn-helper');if(fs.existsSync(f))fs.chmodSync(f,0o755)}\"",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "release": "node scripts/release.mjs"
   },
   "engines": {
     "node": ">=20"

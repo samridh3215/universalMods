@@ -1,5 +1,6 @@
 // HTTP + WebSocket API. Browser UI, mods' client halves, and the agent-side
 // bridges (bin/hive-mcp.mjs, bin/um-hook.mjs) all talk to this.
+import fs from 'node:fs';
 import http from 'node:http';
 import { timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, type WebSocket } from 'ws';
@@ -8,6 +9,8 @@ import { handleHook } from './hookbridge.ts';
 import { createMod } from './mod-builder.ts';
 import { handleMcpTool, hiveTools } from './mcp-tools.ts';
 import type { WebAssets } from './web-build.ts';
+
+const VERSION: string = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
 
 type Handler = (req: http.IncomingMessage, body: any, params: string[], url: URL) => Promise<unknown> | unknown;
 
@@ -28,7 +31,7 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
     if (pending) return pending;
     const f = F();
     return {
-      floor: { provider: f.o.provider, dataDir: f.o.dataDir, halted: f.halted, check: await f.provider.check() },
+      floor: { provider: f.o.provider, dataDir: f.o.dataDir, halted: f.halted, version: VERSION, check: await f.provider.check() },
       agents: f.list(),
       tasks: f.hive.tasks,
       board: f.hive.board,

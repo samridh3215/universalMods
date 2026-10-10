@@ -1,5 +1,7 @@
 # universalMods
 
+[![Release](https://img.shields.io/github/v/release/samridh3215/universalMods?sort=semver)](https://github.com/samridh3215/universalMods/releases) [![CI](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml/badge.svg)](https://github.com/samridh3215/universalMods/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Claude-Code-style **mods** plus a web **floor** for running and steering many agents, on either platform:
 
 - **Claude Code**: one long-lived `claude -p` stream-json process per agent.
@@ -99,6 +101,15 @@ Agents run with **no permission limits** and can do anything your user account c
 ## Scripts
 
 `npm test` runs the unit tests (vitest). `UM_TOKEN=<token> npm run screenshots` refreshes `docs/screenshots` from a running floor. `npm run build` runs `tsc` and then bundles the shell and every mod for both platforms.
+
+## Versioning
+
+universalMods uses [Semantic Versioning](https://semver.org/); see [CHANGELOG.md](CHANGELOG.md) and the [releases](https://github.com/samridh3215/universalMods/releases). To cut a release, add notes under `## [Unreleased]` in the changelog, then:
+
+```bash
+npm run release -- minor   # or patch / major / 1.2.3: bumps package.json, rolls the changelog, commits and tags
+git push --follow-tags     # the tag publishes a GitHub Release with that version's notes
+```
 
 ## License
 

@@ -149,6 +149,11 @@ function Shell() {
     <div className="shell">
       <header className="topbar">
         <strong className="topbar-brand"><img src="/logo.svg" alt="" /> universalMods</strong>
+        {s.version && (
+          <a className="version" href={`https://github.com/samridh3215/universalMods/releases/tag/v${s.version}`} target="_blank" rel="noopener noreferrer" title="Release notes">
+            v{s.version}
+          </a>
+        )}
         <span className={`pill ${s.provider}`}>{s.provider}</span>
         <span className={`dot ${s.connected ? 'on' : 'off'}`} title={s.connected ? 'connected' : 'reconnecting'} />
         <select value={name} onChange={(e) => setName(e.target.value)} title="Layout">
