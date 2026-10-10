@@ -9,6 +9,10 @@ function Kanban() {
   const [title, setTitle] = useState('');
   const [assignee, setAssignee] = useState('');
   const name = (id?: string) => agents.find((a) => a.id === id || a.name === id)?.name ?? id;
+  // Drag a card onto another column to move it there.
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overCol, setOverCol] = useState<Task['status'] | null>(null);
+  const isTaskDrag = (e: React.DragEvent) => e.dataTransfer.types.includes('text/um-task');
 
   return (
     <div className="pad">
@@ -32,17 +36,50 @@ function Kanban() {
         </select>
         <button className="primary">Add</button>
       </form>
-      <p className="muted small">Assigning a task messages that agent. Agents move tasks themselves via the hive tools.</p>
+      <p className="muted small">Drag cards between columns. Assigning a task messages that agent; agents move tasks themselves via the hive tools.</p>
       <div className="kanban">
         {COLS.map((col, ci) => (
-          <div key={col} className="kanban-col" data-col={col}>
+          <div
+            key={col}
+            className={`kanban-col${overCol === col ? ' drop-target' : ''}`}
+            data-col={col}
+            onDragOver={(e) => {
+              if (!isTaskDrag(e)) return;
+              e.preventDefault();
+              e.stopPropagation();
+              if (overCol !== col) setOverCol(col);
+            }}
+            onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setOverCol((c) => (c === col ? null : c))}
+            onDrop={(e) => {
+              if (!isTaskDrag(e)) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const id = e.dataTransfer.getData('text/um-task');
+              const t = tasks.find((x) => x.id === id);
+              if (t && t.status !== col) void floor.updateTask(id, { status: col });
+              setOverCol(null);
+              setDragId(null);
+            }}
+          >
             <h4>
               {col} <span className="muted">{tasks.filter((t) => t.status === col).length}</span>
             </h4>
             {tasks
               .filter((t) => t.status === col)
               .map((t) => (
-                <div key={t.id} className="kanban-card">
+                <div
+                  key={t.id}
+                  className={`kanban-card${dragId === t.id ? ' dragging' : ''}`}
+                  draggable
+                  onDragStart={(e) => {
+                    e.stopPropagation();
+                    e.dataTransfer.setData('text/um-task', t.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    setDragId(t.id);
+                  }}
+                  onDragEnd={() => (setDragId(null), setOverCol(null))}
+                  title="Drag to another column"
+                >
                   <div>
                     <strong>{t.title}</strong>
                   </div>
