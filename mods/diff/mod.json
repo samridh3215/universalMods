@@ -1,0 +1,5 @@
+{
+  "id": "diff",
+  "name": "Diff",
+  "description": "Changed files and per-file git diffs for an agent's working directory, refreshed as the agent works; agents can ask for review with review_request."
+}

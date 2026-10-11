@@ -84,7 +84,7 @@ universalMods also ships as a plugin with a `universalmods` skill that teaches y
 | "Needs you" tray | Shows `ask_user` questions. The agent blocks until you answer |
 | Floor controls | Halt/resume the whole floor, `/broadcast` (status mod), status line with token and $ totals |
 | Roadmap | A live Mermaid flowchart (Shipped → Now → Next → Later, with dependency arrows) or a board. A PM agent drafts it from a brief, and progress moves as kanban tasks tagged `[R3]` get done |
-| Workspace | LeetCode-style panes: drag dividers to resize, drag a pane by its header onto another pane's edge to dock it (or its centre to swap), collapse panes to their title bar (a fully collapsed column folds into a strip), maximize any pane. **+ Panel** adds a view. Save named layouts (`ops`, `plan`, `focus`, `roadmap`, `showcase`, `mission`, `deepdive`, `dashboard`, `planner`, `arcade`, `zen` built in) and open one with `?layout=<name>` |
+| Workspace | LeetCode-style panes: drag dividers to resize, drag a pane by its header onto another pane's edge to dock it (or its centre to swap), collapse panes to their title bar (a fully collapsed column folds into a strip), maximize any pane. **+ Panel** adds a view. Save named layouts (`ops`, `plan`, `focus`, `roadmap`, `showcase`, `mission`, `deepdive`, `dashboard`, `planner`, `arcade`, `zen`, `review` built in) and open one with `?layout=<name>` |
 | Mods & skills | In the top bar (🧩), not in a pane: toggle mods, run mod commands, browse skills |
 | No limits | Claude uses `bypassPermissions`. Codex uses `danger-full-access` and approval `never`. Guards are opt-in mods |
 

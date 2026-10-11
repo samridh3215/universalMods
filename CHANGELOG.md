@@ -10,6 +10,8 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 - Landing page: hero demo loop, animated layouts showcase (morphing pane wireframe + crossfading screenshots), scroll-reveal motion, plugin install step.
 - Installable plugin: `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` + `marketplace.json`, and a `universalmods` skill for installing, running and driving a floor and writing mods.
 - Six new built-in layouts: `mission`, `deepdive`, `dashboard`, `planner`, `arcade`, `zen` (with screenshots in `docs/screenshots/layouts/`).
+- `review` built-in layout: an agent's live terminal, its changes (Diff) and its timeline, for reviewing agent work.
+- **Diff mod** (`mods/diff`): changed files for an agent's working directory as a tree with A/M/D badges, the unified git diff of a clicked file, and a live refresh as the agent works. Agents can call `review_request` to ask for review.
 - Launch kit: demo video (`marketing/video/`, re-renderable), brand images and naming report (`marketing/brand/`), new README hero and OG image.
 
 ### Security
