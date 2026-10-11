@@ -4,7 +4,7 @@
 
 ![universalMods: run a team of coding agents. Mod everything.](marketing/brand/hero.png)
 
-<p align="center"><img src="marketing/video/universalmods-demo.gif" alt="universalMods in 12 seconds: a montage of layouts" width="720"><br><sub>▶ Full 54-second demo: <a href="https://github.com/samridh3215/universalMods/releases/download/v0.3.0/universalmods-demo.mp4">universalmods-demo.mp4</a></sub></p>
+<p align="center"><img src="marketing/video/universalmods-demo.gif" alt="universalMods in 16 seconds: a montage of layouts, then every layout at once in light and dark" width="720"><br><sub>▶ Full 54-second demo: <a href="https://github.com/samridh3215/universalMods/releases/download/v0.3.0/universalmods-demo.mp4">universalmods-demo.mp4</a></sub></p>
 
 **Run a team of coding agents. Mod everything.** universalMods is an open-source, local web floor where a master **Orchestrator** plans and delegates to a team of **Codex** or **Claude Code** agents, each running its real CLI in a live browser terminal, and where every view, guard and workflow is a Claude-Code-style hot-reloading **mod** you can even generate from one sentence.
 

@@ -54,7 +54,7 @@ const shots = [
   },
   // Built-in layout presets (src/web/shell.tsx PRESETS), one shot each.
   ...['mission', 'deepdive', 'dashboard', 'planner', 'arcade', 'zen'].map((l) => ({ file: `layouts/${l}.png`, layout: l, scheme: 'dark' })),
-  ...['dashboard', 'planner'].map((l) => ({ file: `layouts/${l}-light.png`, layout: l, scheme: 'light' })),
+  ...['mission', 'deepdive', 'dashboard', 'planner', 'arcade', 'zen'].map((l) => ({ file: `layouts/${l}-light.png`, layout: l, scheme: 'light' })),
 ];
 // SHOTS=layouts/zen,floor captures only the shots whose file name starts with one of these.
 const only = process.env.SHOTS?.split(',').filter(Boolean);

@@ -300,8 +300,13 @@ const ALL = [...L.map((l) => l.file), 'captures/terminal.png', 'captures/newmod-
   const mc = 5, mr = 4;
   const mw = 440, mh = 275, mg = 28;
   css(plane, { width: mc * (mw + mg) + 'px', height: mr * (mh + mg) + 'px' });
-  Array.from({ length: mc * mr }, (_, i) => L[(i * 3) % L.length]).forEach((l, i) => {
-    const im = document.createElement('img'); im.src = l.file;
+  // Checkerboard of dark and light shots so the wall shows both themes and no two neighbours repeat.
+  const dark = window.MOSAIC.dark, light = window.MOSAIC.light;
+  Array.from({ length: mc * mr }, (_, i) => {
+    const r = Math.floor(i / mc), c = i % mc, k = Math.floor(i / 2);
+    return (r + c) % 2 ? dark[k % dark.length] : light[(k * 3) % light.length];
+  }).forEach((file, i) => {
+    const im = document.createElement('img'); im.src = file;
     css(im, { position: 'absolute', left: (i % mc) * (mw + mg) + 'px', top: Math.floor(i / mc) * (mh + mg) + 'px', width: mw + 'px', height: mh + 'px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '16px', boxShadow: '0 30px 80px rgba(0,0,0,.6)' });
     im.dataset.i = i;
     plane.appendChild(im);

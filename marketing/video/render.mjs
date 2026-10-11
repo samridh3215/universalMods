@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Render composition.html to video, frame by frame, with headless Chrome + ffmpeg.
 //   node marketing/video/render.mjs                      -> universalmods-demo.mp4 (1920x1080, 30 fps, H.264)
-//   node marketing/video/render.mjs --gif                -> universalmods-demo.gif (layout montage loop)
+//   node marketing/video/render.mjs --gif                -> universalmods-demo.gif (layout montage + mosaic loop)
 //   node marketing/video/render.mjs --still 3.2 poster.png
 //   options: --from <s> --to <s> --out <file> --fps <n>
 // Needs Google Chrome (override with CHROME=/path) and ffmpeg on PATH. Uses `ws` from the repo's node_modules.
@@ -70,7 +70,7 @@ try {
     const gif = has('--gif');
     const fps = parseFloat(opt('--fps', gif ? '10' : '30'));
     const from = parseFloat(opt('--from', gif ? String(T.T.mont[0] + 0.02) : '0'));
-    const to = parseFloat(opt('--to', gif ? String(Math.min(T.T.mont[1], from + 11.9)) : String(T.D)));
+    const to = parseFloat(opt('--to', gif ? String(T.T.mosaic[1] - 0.3) : String(T.D)));
     const out = path.resolve(HERE, opt('--out', gif ? 'universalmods-demo.gif' : 'universalmods-demo.mp4'));
     const frames = Math.round((to - from) * fps);
     const enc = gif

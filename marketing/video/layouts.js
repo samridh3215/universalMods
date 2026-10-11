@@ -13,3 +13,10 @@ window.LAYOUTS = [
   { file: 'captures/newmod-cost.png', label: 'Mod lab', kind: 'quirky', desc: 'The Mod Builder and the panel it wrote.' },
   { file: D + 'planner-light.png', label: 'Planner, light', kind: 'detail', desc: 'Every roadmap card, in daylight.' },
 ];
+
+// "One floor. Any layout." wall: dark and light shots laid out as a checkerboard.
+const S = '../../docs/screenshots/';
+window.MOSAIC = {
+  dark: [D + 'mission.png', 'captures/hive.png', D + 'dashboard.png', D + 'arcade.png', S + 'floor.png', D + 'deepdive.png', 'captures/newmod-cost.png', D + 'planner.png', 'captures/roadmap.png', D + 'zen.png'],
+  light: [D + 'mission-light.png', D + 'dashboard-light.png', D + 'deepdive-light.png', D + 'planner-light.png', D + 'arcade-light.png', S + 'roadmap-light.png', D + 'zen-light.png'],
+};
