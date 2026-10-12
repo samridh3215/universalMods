@@ -139,6 +139,22 @@ function saveLayouts(all: Record<string, Layout>) {
   } catch {}
 }
 
+// Built-in presets can't be removed from the code, so "deleting" one hides it.
+function loadHidden(): string[] {
+  try {
+    const h = JSON.parse(localStorage.getItem('um.layouts.hidden') ?? '[]');
+    return Array.isArray(h) ? h.filter((k) => typeof k === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHidden(h: string[]) {
+  try {
+    localStorage.setItem('um.layouts.hidden', JSON.stringify(h));
+  } catch {}
+}
+
 function useRegistry() {
   useSyncExternalStore(_internal.subscribe, () => _internal.registry.version);
   const views = new Map<string, ViewDef>([...builtinViews.map((v) => [v.id, v] as const), ..._internal.registry.views]);
@@ -223,6 +239,7 @@ function Shell() {
   const s = useFloor();
   const { views, toolbar } = useRegistry();
   const [layouts, setLayouts] = useState(loadLayouts);
+  const [hidden, setHidden] = useState(loadHidden);
   // ?layout=<name> picks a layout (handy for sharing a view); otherwise the last one used.
   const [name, setName] = useState(() => new URLSearchParams(location.search).get('layout') ?? localStorage.getItem('um.layout') ?? 'ops');
   const layout = layouts[name] ?? PRESETS.ops;
@@ -239,6 +256,21 @@ function Shell() {
     saveLayouts(all);
   };
   const addPanel = (view: string) => update([...layout, ...fromViews([[view]])]);
+  const hide = (h: string[]) => (setHidden(h), saveHidden(h));
+  const visible = Object.keys(layouts).filter((k) => k === name || !hidden.includes(k));
+  const remove = () => {
+    const rest = visible.filter((k) => k !== name);
+    if (!rest.length) return alert('Keep at least one layout.');
+    if (!confirm(name in PRESETS ? `Hide the built-in layout "${name}"? You can restore built-ins from the layout menu.` : `Delete layout "${name}"?`)) return;
+    const all = { ...layouts };
+    if (name in PRESETS) {
+      all[name] = PRESETS[name]; // drop any customisation too
+      hide([...hidden, name]);
+    } else delete all[name];
+    setLayouts(all);
+    saveLayouts(all);
+    setName(rest[0]);
+  };
 
   return (
     <div className="shell">
@@ -251,10 +283,11 @@ function Shell() {
         )}
         <span className={`pill ${s.provider}`}>{s.provider}</span>
         <span className={`dot ${s.connected ? 'on' : 'off'}`} title={s.connected ? 'connected' : 'reconnecting'} />
-        <select value={name} onChange={(e) => setName(e.target.value)} title="Layout">
-          {Object.keys(layouts).map((k) => (
+        <select value={name} onChange={(e) => (e.target.value === '\0restore' ? hide([]) : setName(e.target.value))} title="Layout">
+          {visible.map((k) => (
             <option key={k}>{k}</option>
           ))}
+          {hidden.length > 0 && <option value={'\0restore'}>↺ restore built-ins ({hidden.length})</option>}
         </select>
         <button
           onClick={() => {
@@ -263,10 +296,14 @@ function Shell() {
             const all = { ...layouts, [n]: layout };
             setLayouts(all);
             saveLayouts(all);
+            if (hidden.includes(n)) hide(hidden.filter((k) => k !== n));
             setName(n);
           }}
         >
           Save as…
+        </button>
+        <button className="layout-delete" onClick={remove} title={name in PRESETS ? 'Hide this built-in layout' : 'Delete this layout'} aria-label="Delete layout">
+          Delete
         </button>
         <select value="" onChange={(e) => e.target.value && addPanel(e.target.value)} title="Add a panel">
           <option value="">+ Panel</option>

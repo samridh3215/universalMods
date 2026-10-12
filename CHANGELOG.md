@@ -7,6 +7,7 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 ## [Unreleased]
 
 ### Added
+- **Delete layouts**: a Delete button next to Save as… removes a saved layout; on a built-in it hides it instead (restore from the layout menu).
 - Landing page: hero demo loop, animated layouts showcase (morphing pane wireframe + crossfading screenshots), scroll-reveal motion, plugin install step.
 - Installable plugin: `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` + `marketplace.json`, and a `universalmods` skill for installing, running and driving a floor and writing mods.
 - Six new built-in layouts: `mission`, `deepdive`, `dashboard`, `planner`, `arcade`, `zen` (with screenshots in `docs/screenshots/layouts/`).
