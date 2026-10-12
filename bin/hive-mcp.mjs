@@ -5,7 +5,6 @@
 import readline from 'node:readline';
 
 const { UM_URL, UM_TOKEN, UM_AGENT_ID } = process.env;
-let tools = null;
 
 async function api(path, body) {
   const r = await fetch(`${UM_URL}${path}`, {
@@ -28,8 +27,8 @@ async function handle(msg) {
     case 'ping':
       return {};
     case 'tools/list':
-      tools ??= (await api('/api/hive-tools')).tools;
-      return { tools };
+      // Fetched fresh each time: what this agent may use depends on the floor's Settings.
+      return { tools: (await api(`/api/hive-tools?agent=${encodeURIComponent(UM_AGENT_ID ?? '')}`)).tools };
     case 'tools/call':
       try {
         const r = await api(`/api/mcp/${encodeURIComponent(params.name)}`, { agentId: UM_AGENT_ID, args: params.arguments ?? {} });

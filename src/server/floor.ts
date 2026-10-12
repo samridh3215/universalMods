@@ -15,6 +15,7 @@ import { makeContext } from './context.ts';
 import { PtyAgents } from './pty-agents.ts';
 import { Hive } from './hive.ts';
 import { instructionsFor } from './instructions.ts';
+import { Settings } from './settings.ts';
 import { discoverSkills } from './skills.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -56,10 +57,12 @@ export class Floor {
   halted = false;
   private sessions = new Map<string, ProviderSession>();
   readonly ptyAgents = new PtyAgents(this);
+  readonly settings: Settings;
   private queues = new Map<string, { text: string; from: string }[]>();
 
   constructor(readonly o: FloorOptions) {
     this.hive = new Hive(o.dataDir);
+    this.settings = new Settings(o.dataDir);
     this.provider = getProvider(o.provider);
     this.kv = new KeyValueStore(path.join(o.dataDir, 'store'));
     this.bus = new Bus(

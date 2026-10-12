@@ -12,6 +12,21 @@ export interface ModRow {
   version: number;
 }
 
+export type Scope = 'off' | 'master' | 'all';
+export interface CapabilityInfo {
+  label: string;
+  description: string;
+  tools: string[];
+  default: Scope;
+}
+/** A UI action an agent asked for (ui_layout / ui_add_panel hive tools). */
+export interface UiAction {
+  action: 'layout' | 'panel';
+  name?: string;
+  view?: string;
+  by: string;
+}
+
 export interface FloorState {
   ready: boolean;
   /** Set when the server rejects our token (or we have none). */
@@ -33,6 +48,8 @@ export interface FloorState {
   commands: { name: string; mod: string; description: string }[];
   toasts: { id: number; text: string; level: string; mod: string }[];
   queued: Record<string, number>;
+  settings: { capabilities: Record<string, Scope> };
+  capabilities: Record<string, CapabilityInfo>;
 }
 
 function storedToken(): string {
@@ -76,12 +93,15 @@ let state: FloorState = {
   commands: [],
   toasts: [],
   queued: {},
+  settings: { capabilities: {} },
+  capabilities: {},
 };
 const listeners = new Set<() => void>();
 const eventListeners = new Set<(e: StampedEvent) => void>();
 const channelListeners = new Set<(m: { mod: string; channel: string; data: unknown }) => void>();
 const modListeners = new Set<(m: { changed: string; kind: string }) => void>();
 const ptyListeners = new Set<(m: { agentId: string; data: string }) => void>();
+const uiListeners = new Set<(m: UiAction) => void>();
 let socket: WebSocket | undefined;
 
 /** Live terminal output from agents (pty mode). */
@@ -91,6 +111,9 @@ export const onPty = (fn: (m: { agentId: string; data: string }) => void) => (pt
 export function sendWs(msg: Record<string, unknown>) {
   if (socket?.readyState === 1) socket.send(JSON.stringify(msg));
 }
+
+/** UI actions requested by agents. */
+export const onUi = (fn: (m: UiAction) => void) => (uiListeners.add(fn), () => void uiListeners.delete(fn));
 
 export const getState = () => state;
 export function subscribe(fn: () => void) {
@@ -146,6 +169,8 @@ export async function refresh() {
     tasks: s.tasks,
     board: s.board,
     messages: s.messages,
+    settings: s.settings ?? state.settings,
+    capabilities: s.capabilities ?? state.capabilities,
     mods: s.mods,
     skills: s.skills,
     status: s.status,
@@ -187,6 +212,11 @@ function handle(m: any) {
       return set({ commands: m.commands });
     case 'floor':
       return set({ halted: m.halted });
+    case 'settings':
+      return set({ settings: m.settings });
+    case 'ui':
+      for (const l of uiListeners) l(m as UiAction);
+      return;
     case 'publish':
       for (const l of channelListeners) l(m);
       return;

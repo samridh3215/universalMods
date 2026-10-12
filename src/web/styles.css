@@ -364,3 +364,25 @@ body.resizing .pane-body, body.resizing-row .pane-body { pointer-events: none; }
 .version:hover { color: var(--accent); border-color: var(--accent); }
 
 .layout-delete:hover { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--line)); }
+
+/* Settings page */
+.settings-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: start center; padding: 6vh 16px; overflow: auto; background: color-mix(in srgb, #000 45%, transparent); }
+.settings-page { width: min(760px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px 24px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.5); }
+.settings-page header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.settings-page h1 { font-size: 20px; margin: 0; }
+.settings-page h2 { font-size: 14px; margin: 16px 0 4px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.settings-page p { margin: 0 0 12px; line-height: 1.5; }
+.settings-page .small { font-size: 12px; margin-top: 16px; }
+.cap-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.cap-row { display: flex; align-items: center; gap: 16px; padding: 14px 16px; }
+.cap-row + .cap-row { border-top: 1px solid var(--line); }
+.cap-text { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cap-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.cap-tools code { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); }
+.seg { display: inline-flex; flex: none; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; height: 30px; padding: 0 12px; background: transparent; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: var(--accent); font-weight: 600; }
+.seg button.on.off { background: color-mix(in srgb, var(--muted) 14%, var(--panel)); color: var(--text); }
+.seg button.on.all { background: color-mix(in srgb, var(--ok) 14%, var(--panel)); color: var(--ok); }
+@media (max-width: 640px) { .cap-row { flex-direction: column; align-items: stretch; } .seg button { flex: 1; } }

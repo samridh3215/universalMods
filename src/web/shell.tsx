@@ -2,7 +2,8 @@
 // hosts views registered by mods, toasts and the "needs you" question tray.
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { _internal, floor, useFloor, type ViewDef } from './mod-api.ts';
-import { api, refresh, setToken } from './store.ts';
+import { api, onUi, refresh, setToken, toast } from './store.ts';
+import { SettingsButton } from './settings.tsx';
 import { ModsPanel, builtinViews } from './builtin-views.tsx';
 import { Markdown } from './markdown.tsx';
 import { fromViews, normalize, Workspace, type Layout } from './layout.tsx';
@@ -256,6 +257,23 @@ function Shell() {
     saveLayouts(all);
   };
   const addPanel = (view: string) => update([...layout, ...fromViews([[view]])]);
+  // Agents with the "Control the UI" capability can switch the layout or add a panel.
+  const latest = useRef({ layouts, views, addPanel });
+  latest.current = { layouts, views, addPanel };
+  useEffect(
+    () =>
+      onUi((m) => {
+        const { layouts, views, addPanel } = latest.current;
+        if (m.action === 'layout' && m.name && layouts[m.name]) {
+          setName(m.name);
+          toast(`${m.by} switched the layout to ${m.name}`, 'info');
+        } else if (m.action === 'panel' && m.view && views.has(m.view)) {
+          addPanel(m.view);
+          toast(`${m.by} added a ${views.get(m.view)?.title ?? m.view} panel`, 'info');
+        }
+      }),
+    [],
+  );
   const hide = (h: string[]) => (setHidden(h), saveHidden(h));
   const visible = Object.keys(layouts).filter((k) => k === name || !hidden.includes(k));
   const remove = () => {
@@ -324,6 +342,7 @@ function Shell() {
           </span>
         ))}
         {!s.check?.ok && <span className="bad">{s.check?.error}</span>}
+        <SettingsButton />
         <ModsButton />
         <button className={s.halted ? 'danger' : 'danger-outline'} onClick={() => floor.halt(!s.halted)}>
           {s.halted ? 'Resume floor' : 'Halt floor'}

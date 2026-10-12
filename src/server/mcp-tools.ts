@@ -1,5 +1,7 @@
 // Server side of the "hive" MCP tools (bin/hive-mcp.mjs forwards calls here).
 import type { Floor } from './floor.ts';
+import { FLOOR_TOOLS, handleFloorTool } from './floor-tools.ts';
+import { CAPABILITIES } from './settings.ts';
 
 export const HIVE_TOOLS = [
   { name: 'list_agents', description: 'List agents on the floor with role, status and current activity.', inputSchema: { type: 'object', properties: {} } },
@@ -37,20 +39,31 @@ export const HIVE_TOOLS = [
   { name: 'ask_user', description: 'Ask the human supervisor a question and wait for the answer.', inputSchema: { type: 'object', properties: { question: { type: 'string' } }, required: ['question'] } },
 ];
 
-/** Built-in hive tools plus any registered by mods. */
-export function hiveTools(floor: Floor) {
-  return [...HIVE_TOOLS, ...[...floor.modTools.values()].map((t) => t.def)];
+/** Built-in hive tools plus any registered by mods, minus what Settings withholds from this agent. */
+export function hiveTools(floor: Floor, agentId?: string) {
+  const all = [...HIVE_TOOLS, ...FLOOR_TOOLS, ...[...floor.modTools.values()].map((t) => t.def)];
+  if (!agentId) return all;
+  const me = floor.get(agentId);
+  return all.filter((t) => floor.settings.allowed(me, t.name));
 }
 
 export async function handleMcpTool(floor: Floor, tool: string, agentId: string, a: Record<string, any>): Promise<{ text: string }> {
   const me = floor.get(agentId);
   if (!me) throw new Error(`unknown agent ${agentId}`);
+  // Checked on every call: the tool list an agent saw at start may be stale.
+  if (!floor.settings.allowed(me, tool)) {
+    const cap = floor.settings.capabilityOf(tool)!;
+    const scope = floor.settings.get().capabilities[cap] === 'master' ? 'the Orchestrator only' : 'no agents';
+    throw new Error(`${tool} is turned off for ${me.name}: Settings → "${CAPABILITIES[cap].label}" allows ${scope}. Ask the user to change it; don't retry.`);
+  }
   const json = (v: unknown) => ({ text: JSON.stringify(v, null, 2) });
   const modTool = floor.modTools.get(tool);
   if (modTool) {
     const out = await modTool.handler(a, { agentId: me.id, agentName: me.name });
     return typeof out === 'string' ? { text: out } : json(out ?? { ok: true });
   }
+  const floorTool = await handleFloorTool(floor, me, tool, a);
+  if (floorTool) return floorTool;
   switch (tool) {
     case 'list_agents':
       return json(floor.list().map((x) => ({ id: x.id, name: x.name, role: x.role, status: x.status, activity: x.lastActivity, you: x.id === me.id })));

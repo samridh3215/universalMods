@@ -6,6 +6,11 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 
 ## [Unreleased]
 
+### Added
+- **Settings page** (⚙ in the top bar): choose which agents may run the floor: *Off*, *Orchestrator* or *All agents* per capability. Saved per floor in `settings.json`; enforced on every tool call.
+- **New hive tools** behind those settings: `agent_start` / `agent_stop` / `agent_interrupt` / `agent_hold` / `agent_archive`, `mod_list` / `mod_enable` / `mod_create`, and `ui_layout` / `ui_add_panel` (switch the layout or add a panel for everyone watching). Tell the Orchestrator "switch to the dashboard layout" or "build a mod that…" and it does it.
+- `GET` / `PUT /api/settings`.
+
 ## [0.4.0] - 2026-10-12
 
 ### Added

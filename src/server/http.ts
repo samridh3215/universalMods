@@ -8,6 +8,7 @@ import type { Floor } from './floor.ts';
 import { handleHook } from './hookbridge.ts';
 import { createMod } from './mod-builder.ts';
 import { handleMcpTool, hiveTools } from './mcp-tools.ts';
+import { CAPABILITIES } from './settings.ts';
 import type { WebAssets } from './web-build.ts';
 
 const VERSION: string = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
@@ -41,6 +42,8 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
       status: Object.fromEntries(f.status),
       questions: f.questionList(),
       commands: [...f.commands].map(([name, c]) => ({ name, ...c })),
+      settings: f.settings.get(),
+      capabilities: CAPABILITIES,
     };
   });
   route('GET', '/api/agents/:id/events', (_q, _b, [id], url) => F().hive.eventsFor(id, Number(url.searchParams.get('limit') ?? 500)));
@@ -67,9 +70,15 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
   route('POST', '/api/mod-builder', (_q, b) => createMod(F(), String(b.description ?? ''), b.target === 'project' ? 'project' : 'floor'));
   route('POST', '/api/mods/:id', (_q, b, [id]) => F().runtime.setEnabled(id, !!b.enabled));
   route('POST', '/api/mods/:id/press', (_q, b, [id]) => F().bus.emit('ui.press', { mod: id, key: String(b.key), payload: b.payload }, () => null, { only: id }));
+  route('GET', '/api/settings', () => ({ settings: F().settings.get(), capabilities: CAPABILITIES }));
+  route('PUT', '/api/settings', (_q, b) => {
+    const settings = F().settings.set(b);
+    F().o.broadcast({ type: 'settings', settings });
+    return { settings };
+  });
   route('POST', '/api/commands/:name', (_q, b, [name]) => F().runCommand(decodeURIComponent(name), String(b.args ?? ''), 'user'));
   // Agent-side bridges.
-  route('GET', '/api/hive-tools', () => ({ tools: hiveTools(F()) }));
+  route('GET', '/api/hive-tools', (_q, _b, _p, url) => ({ tools: hiveTools(F(), url.searchParams.get('agent') ?? undefined) }));
   route('POST', '/api/hook', (_q, b) => handleHook(F(), b));
   route('POST', '/api/mcp/:tool', (_q, b, [tool]) => handleMcpTool(F(), tool, b.agentId, b.args ?? {}));
 

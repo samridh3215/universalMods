@@ -46,10 +46,11 @@ Every call needs the header `x-um-token: <token>` (base URL `http://127.0.0.1:44
 | Message an agent | `POST /api/messages` `{to, text}` |
 | Halt / resume everything | `POST /api/floor/halt` `{on: true\|false}` |
 | Build a mod from a sentence | `POST /api/mod-builder` `{description, target: "floor"\|"project"}` |
+| Agent permissions | `GET /api/settings` · `PUT /api/settings` `{capabilities: {spawn\|agents\|mods\|ui: "off"\|"master"\|"all"}}` |
 
 Prefer messaging the **Orchestrator** (the agent with `master: true`) and letting it delegate.
 
-Agents on the floor already have hive MCP tools (`list_agents`, `send_message`, `spawn_agent`, `task_*`, `board_*`, `ask_user`, plus tools added by mods).
+Agents on the floor already have hive MCP tools (`list_agents`, `send_message`, `spawn_agent`, `task_*`, `board_*`, `ask_user`, plus tools added by mods). Depending on Settings they also get `agent_*` (start/stop/archive teammates), `mod_*` (list, toggle, build mods) and `ui_*` (switch layout, add a panel); by default only the Orchestrator has those.
 
 ## Write a mod
 

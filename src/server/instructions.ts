@@ -14,6 +14,8 @@ Coordinate through the "hive" MCP tools:
 - ${tool('board_read')}, ${tool('board_write')} {text}: the shared plan document. Read it before big decisions.
 - ${tool('ask_user')} {question}: block until the human answers. Use only when truly stuck.
 Floor mods may add more hive tools (e.g. roadmap_*); list your tools to see them.
+Depending on the floor's Settings you may also have agent_* (start/stop/archive teammates), mod_* (list, toggle or build mods)
+and ui_* (switch the layout or add a panel for the humans watching). If a tool says it is turned off, tell the user instead of retrying.
 
 ${
     a.master
