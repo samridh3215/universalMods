@@ -1,6 +1,6 @@
 {
   "name": "universalmods",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Local web floor that runs a team of Codex or Claude Code agents in live terminals, with a master orchestrator and Claude-Code-style hot-reloading mods. This plugin adds a skill to install, run and drive a floor and to write mods.",
   "author": {
     "name": "Samridh Anand",

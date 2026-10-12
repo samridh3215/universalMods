@@ -6,6 +6,8 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-12
+
 ### Added
 - **Delete layouts**: a Delete button next to Save as… removes a saved layout; on a built-in it hides it instead (restore from the layout menu).
 - Landing page: hero demo loop, animated layouts showcase (morphing pane wireframe + crossfading screenshots), scroll-reveal motion, plugin install step.
@@ -58,7 +60,8 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 - Hive: shared kanban, plan board, agent-to-agent messages, `spawn_agent` and `ask_user` over a stdio MCP server.
 - Hook bridge for `PreToolUse` guards; built-in grid, timeline, kanban/board, status and guard-example mods.
 
-[Unreleased]: https://github.com/samridh3215/universalMods/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/samridh3215/universalMods/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/samridh3215/universalMods/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/samridh3215/universalMods/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/samridh3215/universalMods/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/samridh3215/universalMods/releases/tag/v0.1.0
