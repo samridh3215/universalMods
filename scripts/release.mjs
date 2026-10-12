@@ -37,6 +37,7 @@ const repo = 'https://github.com/samridh3215/universalMods';
 cl = cl.replace(/\[Unreleased\]: .*\n/, `[Unreleased]: ${repo}/compare/v${next}...HEAD\n[${next}]: ${repo}/compare/v${pkg.version}...v${next}\n`);
 fs.writeFileSync(clFile, cl);
 
+const prev = pkg.version;
 pkg.version = next;
 fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n');
 const lockFile = path.join(ROOT, 'package-lock.json');
@@ -47,7 +48,14 @@ if (fs.existsSync(lockFile)) {
   fs.writeFileSync(lockFile, JSON.stringify(lock, null, 2) + '\n');
 }
 
-git('add', 'package.json', 'package-lock.json', 'CHANGELOG.md');
+// Plugin manifests carry the version too.
+const manifests = ['.codex-plugin/plugin.json', '.claude-plugin/plugin.json', '.claude-plugin/marketplace.json'].filter((f) => fs.existsSync(path.join(ROOT, f)));
+for (const f of manifests) {
+  const file = path.join(ROOT, f);
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replaceAll(`"version": "${prev}"`, `"version": "${next}"`));
+}
+
+git('add', 'package.json', 'package-lock.json', 'CHANGELOG.md', ...manifests);
 git('commit', '-m', `Release v${next}`);
 git('tag', '-a', `v${next}`, '-m', `v${next}`);
 console.log(`Tagged v${next}. Publish it with:\n  git push --follow-tags`);
