@@ -90,3 +90,13 @@ export function writeFile(file: string, content: string): string {
   fs.writeFileSync(file, content);
   return file;
 }
+
+/**
+ * Whether a CLI's session store holds a file for this session id (its name contains the id).
+ * undefined when none of the store dirs exist, i.e. we can't tell (unknown layout, other home).
+ */
+export function sessionSaved(roots: string[], id: string): boolean | undefined {
+  const existing = roots.filter((r) => fs.existsSync(r));
+  if (!existing.length || !id) return undefined;
+  return existing.some((r) => fs.readdirSync(r, { recursive: true }).some((f) => String(f).endsWith('.jsonl') && path.basename(String(f)).includes(id)));
+}

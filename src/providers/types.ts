@@ -49,5 +49,10 @@ export interface Provider {
   writeConfig(input: ConfigInput, config: Record<string, any>): string[];
   start(ctx: StartContext): Promise<ProviderSession>;
   /** Interactive TUI command for live-terminal mode (status then comes from hooks). */
+  /**
+   * Whether the CLI still has this session saved, so resuming it can work. false makes the
+   * floor start a fresh session instead of a resume the CLI would reject; undefined = unknown.
+   */
+  hasSession?(id: string, env: Record<string, string>): boolean | undefined;
   ptyCommand(ctx: StartContext): { bin: string; args: string[]; autoAnswers?: AutoAnswer[]; turnErrors?: TurnError[] };
 }
