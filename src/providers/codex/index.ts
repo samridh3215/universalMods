@@ -2,7 +2,9 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import type { TurnError } from '../pty.ts';
 import type { Provider, ProviderSession, StartContext } from '../types.ts';
-import { lineReader, toToml, versionOf, which } from '../util.ts';
+import os from 'node:os';
+import path from 'node:path';
+import { lineReader, sessionSaved, toToml, versionOf, which } from '../util.ts';
 import { buildCodexConfig, writeCodexConfig } from './config.ts';
 import { newCodexState, normalizeCodex } from './normalize.ts';
 
@@ -78,6 +80,12 @@ export const codexProvider: Provider = {
 
   buildConfig: buildCodexConfig,
   writeConfig: writeCodexConfig,
+
+  // Rollouts live in $CODEX_HOME/sessions/YYYY/MM/DD/rollout-<time>-<id>.jsonl (or archived_sessions).
+  hasSession(id, env) {
+    const home = env.CODEX_HOME ?? process.env.CODEX_HOME ?? path.join(os.homedir(), '.codex');
+    return sessionSaved([path.join(home, 'sessions'), path.join(home, 'archived_sessions')], id);
+  },
 
   ptyCommand(ctx) {
     const c = ctx.config;

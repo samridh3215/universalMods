@@ -3,7 +3,9 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import type { TurnError } from '../pty.ts';
 import type { Provider, ProviderSession, StartContext } from '../types.ts';
-import { lineReader, versionOf, which } from '../util.ts';
+import os from 'node:os';
+import path from 'node:path';
+import { lineReader, sessionSaved, versionOf, which } from '../util.ts';
 import { buildClaudeConfig, claudeArgs, writeClaudeConfig } from './config.ts';
 import { newClaudeState, normalizeClaude } from './normalize.ts';
 
@@ -30,6 +32,12 @@ export const claudeProvider: Provider = {
 
   buildConfig: buildClaudeConfig,
   writeConfig: writeClaudeConfig,
+
+  // Transcripts live in ~/.claude/projects/<cwd slug>/<id>.jsonl.
+  hasSession(id, env) {
+    const home = env.CLAUDE_CONFIG_DIR ?? process.env.CLAUDE_CONFIG_DIR ?? path.join(os.homedir(), '.claude');
+    return sessionSaved([path.join(home, 'projects')], id);
+  },
 
   ptyCommand(ctx) {
     const resume = !!ctx.resume;
