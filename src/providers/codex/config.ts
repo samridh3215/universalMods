@@ -28,7 +28,7 @@ export function buildCodexConfig(i: ConfigInput): Record<string, any> {
     overrides: {
       'mcp_servers.hive': { command: i.mcp.command, args: i.mcp.args, env: i.mcp.env, tool_timeout_sec: 3600 },
       'features.hooks': true,
-      'features.multi_agent': true,
+      'features.multi_agent': false,
       ...Object.fromEntries(HOOK_EVENTS.map((e) => [`hooks.${e}`, hook(e)])),
     } as Record<string, unknown>,
     // Hooks we add are vetted by us; skip Codex's interactive /hooks trust review.

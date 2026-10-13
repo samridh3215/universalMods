@@ -243,10 +243,62 @@ export class Floor {
     return { UM_URL: this.o.url, UM_TOKEN: this.o.token, UM_AGENT_ID: a.id, UM_AGENT_NAME: a.name };
   }
 
+  /**
+   * The stored config embeds the hive MCP env from spawn time, but the token (and maybe the
+   * URL/port) change on every server start. Patch every `{ UM_TOKEN, UM_AGENT_ID: <this agent> }`
+   * env block with the live values and rewrite the provider's files (e.g. Claude's mcp.json).
+   */
+  private refreshRunEnv(agent: AgentInfo, config: Record<string, any>, env: Record<string, string>) {
+    let changed = false;
+    const walk = (o: any) => {
+      if (!o || typeof o !== 'object') return;
+      if ('UM_TOKEN' in o && o.UM_AGENT_ID === agent.id) {
+        for (const k of ['UM_URL', 'UM_TOKEN', 'UM_AGENT_NAME'] as const) {
+          if (o[k] !== env[k]) {
+            o[k] = env[k];
+            changed = true;
+          }
+        }
+        return;
+      }
+      for (const v of Object.values(o)) walk(v);
+    };
+    walk(config);
+
+    const instructions = instructionsFor(agent, this.o.provider);
+    if (config.thread && config.thread.developerInstructions !== instructions) {
+      config.thread.developerInstructions = instructions;
+      changed = true;
+    }
+    if (config.cli && config.cli.appendSystemPrompt !== instructions) {
+      config.cli.appendSystemPrompt = instructions;
+      changed = true;
+    }
+    if (config.overrides && config.overrides['features.multi_agent'] !== false) {
+      config.overrides['features.multi_agent'] = false;
+      changed = true;
+    }
+
+    if (!changed) return;
+    const agentDir = this.hive.agentDir(agent.id);
+    const input = {
+      agent,
+      spec: {},
+      agentDir,
+      instructions,
+      mcp: { command: process.execPath, args: [path.join(ROOT, 'bin/hive-mcp.mjs')], env },
+      hookCommand: `"${process.execPath}" "${path.join(ROOT, 'bin/um-hook.mjs')}"`,
+      skills: (config.skills ?? []) as string[],
+    };
+    const files = this.provider.writeConfig(input, config);
+    fs.writeFileSync(path.join(agentDir, 'config.json'), JSON.stringify({ config, files }, null, 2));
+  }
+
   private async startSession(agent: AgentInfo) {
     const { config } = this.agentConfig(agent.id);
     const pty = this.mode === 'pty';
     const env = this.agentEnv(agent);
+    this.refreshRunEnv(agent, config, env);
     // A CLI can only resume a session that has had at least one turn.
     let resume = pty && agent.turns === 0 ? undefined : agent.sessionId;
     // ... and that it still has on disk (deleted, never persisted, or a floor copied from

@@ -1,8 +1,8 @@
 import type { AgentInfo, ProviderId } from '../core/types.ts';
 
 /** The hive protocol every agent receives (Codex: developerInstructions, Claude: --append-system-prompt). */
-export function instructionsFor(a: AgentInfo, provider: ProviderId): string {
-  const tool = (n: string) => (provider === 'claude' ? `mcp__hive__${n}` : `hive.${n}`);
+export function instructionsFor(a: AgentInfo, _provider: ProviderId): string {
+  const tool = (n: string) => `mcp__hive__${n}`;
   return `You are "${a.name}", an agent on a universalMods floor. Your role: ${a.role}.
 Other agents work on this floor at the same time. A human supervises from a web UI.
 
@@ -20,8 +20,8 @@ and ui_* (switch the layout or add a panel for the humans watching). If a tool s
 ${
     a.master
       ? `You are the floor's MASTER ORCHESTRATOR. The human talks to you first. Turn requests into a plan on the board and tasks on the kanban,
-spawn specialised teammates (spawn_agent) for work that can run in parallel, assign and track their tasks, review what they report,
-and keep the human informed. Do small or glue work yourself; delegate the rest. You are permanent: you cannot be deleted.
+spawn specialised teammates (${tool('spawn_agent')}) for work that can run in parallel, assign and track their tasks, review what they report,
+and keep the human informed. When asked to create an agent, teammate or specialist for a specific domain or stack, always call ${tool('spawn_agent')} with a descriptive name, role, and initial prompt so a new agent is spawned directly on the floor. Do small or glue work yourself; delegate the rest. You are permanent: you cannot be deleted.
 
 `
       : ''

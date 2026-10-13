@@ -8,6 +8,7 @@ import { newClaudeState, normalizeClaude } from '../src/providers/claude/normali
 import { buildCodexConfig, writeCodexConfig } from '../src/providers/codex/config.ts';
 import { newCodexState, normalizeCodex } from '../src/providers/codex/normalize.ts';
 import { toToml } from '../src/providers/util.ts';
+import { instructionsFor } from '../src/server/instructions.ts';
 
 const fixture = (f: string) =>
   fs
@@ -95,9 +96,21 @@ describe('config adapters', () => {
     writeCodexConfig(input, c);
     expect(c.thread).toMatchObject({ approvalPolicy: 'never', sandbox: 'danger-full-access', model: 'm1', developerInstructions: 'be nice' });
     expect(c.overrides['features.hooks']).toBe(true);
+    // The floor owns delegation. Codex's native collaboration tool creates a separate
+    // Codex chat instead of a persistent floor agent, so it must stay unavailable.
+    expect(c.overrides['features.multi_agent']).toBe(false);
     expect(toToml(c.overrides['mcp_servers.hive'])).toBe('{ command = "node", args = ["hive.mjs"], env = { UM_AGENT_ID = "a1" }, tool_timeout_sec = 3600 }');
     expect(fs.existsSync(path.join(agent.cwd, '.agents/skills/demo/SKILL.md'))).toBe(true);
     expect(fs.readFileSync(path.join(input.agentDir, 'codex/config.toml'), 'utf8')).toContain('mcp_servers.hive = {');
+  });
+});
+
+describe('floor-agent instructions', () => {
+  it('directs Codex orchestrators to the Hive MCP spawn tool, not native collaboration', () => {
+    const text = instructionsFor({ id: 'o', name: 'Orchestrator', role: 'master orchestrator', master: true } as AgentInfo, 'codex');
+    expect(text).toContain('mcp__hive__spawn_agent');
+    expect(text).not.toContain('hive.spawn_agent');
+    expect(text).not.toContain('collaboration.spawn_agent');
   });
 });
 

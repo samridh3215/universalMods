@@ -3,7 +3,7 @@
 // is doing from the CLI's hooks (SessionStart, UserPromptSubmit, Pre/PostToolUse, Stop …).
 import fs from 'node:fs';
 import type { AgentEvent, AgentInfo } from '../core/types.ts';
-import { PtySession, TurnErrorWatch } from '../providers/pty.ts';
+import { plain, PtySession, TurnErrorWatch } from '../providers/pty.ts';
 import type { ProviderSession, StartContext } from '../providers/types.ts';
 import type { Floor } from './floor.ts';
 
@@ -89,6 +89,15 @@ export class PtyAgents {
    * otherwise stay "working" forever.
    */
   observe(agent: AgentInfo, data: string) {
+    // Codex can reach its usable prompt while reporting an unrelated global MCP failure. In
+    // that state it does not fire SessionStart, leaving the floor stuck at "starting" and its
+    // queue unable to drain. Its explicit startup-complete warning is a safe readiness signal:
+    // the Hive MCP is independently connected and the terminal is accepting input.
+    if (agent.status === 'starting' && agent.provider === 'codex' && /MCPstartupincomplete/i.test(plain(data))) {
+      this.ptys.get(agent.id)?.markReady();
+      this.floor.emitAgentEvent(agent, { kind: 'notice', text: 'Codex started with one or more unavailable MCP servers; floor controls remain available.' });
+      this.floor.agentReady(agent);
+    }
     const watch = this.watches.get(agent.id);
     if (!watch) return;
     if (agent.status !== 'working') {

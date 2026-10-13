@@ -107,4 +107,22 @@ describe('PtyAgents turn guards (real PTY running cat)', () => {
     expect(agent.status).toBe('idle');
     expect(turns(events).at(-1)).toEqual(['abort', 'turn ended without a Stop hook']);
   });
+
+  it('marks Codex ready when global MCP startup is incomplete but its terminal is usable', () => {
+    const { floor, events } = fakeFloor(CODEX_TURN_ERRORS);
+    let ready = 0;
+    floor.agentReady = (agent: AgentInfo) => {
+      ready += 1;
+      agent.status = 'idle';
+    };
+    pa = new PtyAgents(floor);
+    const agent = { id: 'codex', provider: 'codex', status: 'starting', turns: 0, cwd: process.cwd() } as AgentInfo;
+    pa.start({ agent, env: {}, onExit() {} } as any);
+
+    pa.observe(agent, '⚠ MCP startup incomplete (failed: render, ruflo)');
+
+    expect(ready).toBe(1);
+    expect(agent.status).toBe('idle');
+    expect(events).toContainEqual(expect.objectContaining({ kind: 'notice', text: expect.stringMatching(/floor controls remain available/) }));
+  });
 });
