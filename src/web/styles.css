@@ -363,6 +363,8 @@ body.resizing .pane-body, body.resizing-row .pane-body { pointer-events: none; }
 .version { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 7px; text-decoration: none; font-family: var(--mono); }
 .version:hover { color: var(--accent); border-color: var(--accent); }
 
+.save-as { display: flex; align-items: center; gap: 4px; }
+.save-as input { width: 140px; }
 .layout-delete:hover { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--line)); }
 
 /* Settings page */
