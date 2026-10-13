@@ -1,10 +1,38 @@
 // Small building blocks exported to client mods via the SDK.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AgentInfo, StampedEvent } from '../core/types.ts';
 import { Markdown } from './markdown.tsx';
 
 export function StatusBadge({ status }: { status: string }) {
   return <span className={`status-badge status-${status}`}>{status}</span>;
+}
+
+/**
+ * A button that asks for a second click instead of window.confirm(), which some embedded
+ * browsers (e.g. the Claude desktop preview pane) answer with false without showing a dialog.
+ */
+export function ConfirmButton({ label, confirmLabel, title, className, onConfirm }: { label: string; confirmLabel: string; title?: string; className?: string; onConfirm(): unknown }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      className={[className, armed && 'danger-outline'].filter(Boolean).join(' ') || undefined}
+      title={title}
+      aria-label={armed ? confirmLabel : title}
+      onBlur={() => setArmed(false)}
+      onClick={() => {
+        if (!armed) return setArmed(true);
+        setArmed(false);
+        void onConfirm();
+      }}
+    >
+      {armed ? confirmLabel : label}
+    </button>
+  );
 }
 
 export function fmtUsage(a: AgentInfo) {

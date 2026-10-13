@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SpawnTile } from './spawn-tile.tsx';
-import { AgentTerminal, StatusBadge, floor, fmtUsage, registerView, useFloor, type AgentInfo, type ViewProps } from 'universal-mods';
+import { AgentTerminal, ConfirmButton, StatusBadge, floor, fmtUsage, registerView, useFloor, type AgentInfo, type ViewProps } from 'universal-mods';
 
 /** Stable hue per agent name, so each agent keeps its colour. */
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
@@ -54,7 +54,7 @@ function AgentCard({ a, collapsed, focused, onToggle, onFocus }: { a: AgentInfo;
         <button className="danger-outline" onClick={() => floor.kill(a.id)} disabled={a.status === 'stopped'}>
           Stop
         </button>
-        {!a.master && <button onClick={() => confirm(`Archive ${a.name}?`) && floor.archive(a.id)}>Archive</button>}
+        {!a.master && <ConfirmButton label="Archive" confirmLabel={`Archive ${a.name}?`} title="Stop the agent and remove it from the floor" onConfirm={() => floor.archive(a.id)} />}
         <span className="muted small" title={a.cwd}>
           {a.cwd.split('/').slice(-2).join('/')}
         </span>

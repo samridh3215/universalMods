@@ -11,6 +11,10 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 - **New hive tools** behind those settings: `agent_start` / `agent_stop` / `agent_interrupt` / `agent_hold` / `agent_archive`, `mod_list` / `mod_enable` / `mod_create`, and `ui_layout` / `ui_add_panel` (switch the layout or add a panel for everyone watching). Tell the Orchestrator "switch to the dashboard layout" or "build a mod that…" and it does it.
 - `GET` / `PUT /api/settings`.
 
+### Fixed
+- Live-terminal agents no longer stay "working" forever when the CLI can't run the turn. The floor watches the terminal for the provider's error lines (Claude: login expired / `Please run /login`, usage limit, low credit, API error; Codex: not logged in / 401, usage limit, `■` errors). When one appears and the CLI then goes quiet, the agent is marked `error` with a notice. Its queue is kept for the next send. Claude's "waiting for your input" notification also ends a turn that never got a Stop hook. An interrupt that no hook confirms still returns the agent to idle after 2.5s, and no longer aborts a turn that started after it.
+- **Archive**, layout **Delete** and roadmap **Remove** did nothing in browsers that suppress `window.confirm()` (such as the Claude desktop preview pane). They now ask for a second click instead (`ConfirmButton`, also exported to client mods). **Save as…** names the layout in an inline field instead of `window.prompt()`, which those browsers don't support.
+
 ## [0.4.0] - 2026-10-12
 
 ### Added

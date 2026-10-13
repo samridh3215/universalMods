@@ -13,6 +13,13 @@ export interface AutoAnswer {
   delayMs?: number;
 }
 
+/** A CLI error line that means the current turn can't proceed (no Stop hook will follow). */
+export interface TurnError {
+  /** Tested against new output with ANSI codes and whitespace stripped. */
+  pattern: RegExp;
+  message: string;
+}
+
 export interface PtyOptions {
   bin: string;
   args: string[];
@@ -25,12 +32,59 @@ export interface PtyOptions {
   onExit(code: number): void;
 }
 
-const plain = (s: string) =>
+export const plain = (s: string) =>
   s
     .replace(/\x1b\[[0-9;?<>=]*[ -/]*[@-~]/g, '')
     .replace(/\x1b[\]P][^\x07\x1b]*(\x07|\x1b\\)/g, '')
     .replace(/\x1b./g, '')
     .replace(/\s+/g, '');
+
+/** Output that redraws the whole screen (old error lines would match again). */
+const FULL_REDRAW = /\x1b\[[23]J/;
+/** The CLI is still busy (spinner) or retrying on its own: an error line before this isn't final. */
+const BUSY = /retrying|esctointerrupt/gi;
+const CARRY = 300;
+
+/**
+ * Watches one agent's terminal output during a turn for its provider's fatal error lines.
+ * Pure (no timers): feed it chunks, it says when something matched.
+ */
+export class TurnErrorWatch {
+  private carry = '';
+  private prompts: string[] = [];
+
+  constructor(private errors: TurnError[]) {}
+
+  /** Forget output seen so far (turn start, turn end). */
+  reset() {
+    this.carry = '';
+  }
+
+  /** A prompt about to be (or just) submitted; its echo on screen must not count as an error. */
+  expectPrompt(text: string) {
+    const p = plain(text);
+    if (p) this.prompts = [p, ...this.prompts].slice(0, 3);
+  }
+
+  /** Returns the matched error, 'busy' when the CLI shows it is still working, else undefined. */
+  feed(chunk: string): TurnError | 'busy' | undefined {
+    if (!this.errors.length) return undefined;
+    if (FULL_REDRAW.test(chunk)) {
+      this.carry = '';
+      return undefined;
+    }
+    let s = this.carry + plain(chunk);
+    for (const p of this.prompts) s = s.split(p).join('');
+    this.carry = s.slice(-CARRY);
+    // Only text after the last busy marker counts: an error line followed by more work isn't fatal.
+    let after = 0;
+    for (const m of s.matchAll(BUSY)) after = m.index + m[0].length;
+    const tail = s.slice(after);
+    const hit = this.errors.find((e) => e.pattern.test(tail));
+    if (hit) this.carry = '';
+    return hit ?? (after ? 'busy' : undefined);
+  }
+}
 
 export class PtySession {
   private p: IPty;

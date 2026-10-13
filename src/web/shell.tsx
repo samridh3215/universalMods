@@ -7,6 +7,7 @@ import { SettingsButton } from './settings.tsx';
 import { ModsPanel, builtinViews } from './builtin-views.tsx';
 import { Markdown } from './markdown.tsx';
 import { fromViews, normalize, Workspace, type Layout } from './layout.tsx';
+import { ConfirmButton } from './components.tsx';
 
 // Built-in layouts. Users rearrange them freely; changes are saved per layout name.
 const PRESETS: Record<string, Layout> = {
@@ -138,6 +139,41 @@ function saveLayouts(all: Record<string, Layout>) {
     const custom = Object.fromEntries(Object.entries(all).filter(([k]) => !(k in PRESETS) || JSON.stringify(all[k]) !== JSON.stringify(PRESETS[k])));
     localStorage.setItem('um.layouts', JSON.stringify(custom));
   } catch {}
+}
+
+/** "Save as…" with an inline name field: window.prompt() throws in some embedded browsers. */
+function SaveAs({ initial, onSave }: { initial: string; onSave(name: string): void }) {
+  const [value, setValue] = useState<string | null>(null);
+  if (value === null) return <button onClick={() => setValue(initial)}>Save as…</button>;
+  const save = () => {
+    const n = value.trim();
+    if (n) onSave(n);
+    setValue(null);
+  };
+  return (
+    <form
+      className="save-as"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save();
+      }}
+    >
+      <input
+        autoFocus
+        value={value}
+        aria-label="Layout name"
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === 'Escape' && setValue(null)}
+      />
+      <button type="submit" className="primary" disabled={!value.trim()}>
+        Save
+      </button>
+      <button type="button" onClick={() => setValue(null)}>
+        Cancel
+      </button>
+    </form>
+  );
 }
 
 // Built-in presets can't be removed from the code, so "deleting" one hides it.
@@ -278,8 +314,7 @@ function Shell() {
   const visible = Object.keys(layouts).filter((k) => k === name || !hidden.includes(k));
   const remove = () => {
     const rest = visible.filter((k) => k !== name);
-    if (!rest.length) return alert('Keep at least one layout.');
-    if (!confirm(name in PRESETS ? `Hide the built-in layout "${name}"? You can restore built-ins from the layout menu.` : `Delete layout "${name}"?`)) return;
+    if (!rest.length) return toast('Keep at least one layout.', 'warn');
     const all = { ...layouts };
     if (name in PRESETS) {
       all[name] = PRESETS[name]; // drop any customisation too
@@ -307,22 +342,23 @@ function Shell() {
           ))}
           {hidden.length > 0 && <option value={'\0restore'}>↺ restore built-ins ({hidden.length})</option>}
         </select>
-        <button
-          onClick={() => {
-            const n = prompt('Save layout as', name === 'ops' ? 'my-layout' : name);
-            if (!n) return;
+        <SaveAs
+          initial={name === 'ops' ? 'my-layout' : name}
+          onSave={(n) => {
             const all = { ...layouts, [n]: layout };
             setLayouts(all);
             saveLayouts(all);
             if (hidden.includes(n)) hide(hidden.filter((k) => k !== n));
             setName(n);
           }}
-        >
-          Save as…
-        </button>
-        <button className="layout-delete" onClick={remove} title={name in PRESETS ? 'Hide this built-in layout' : 'Delete this layout'} aria-label="Delete layout">
-          Delete
-        </button>
+        />
+        <ConfirmButton
+          className="layout-delete"
+          label="Delete"
+          confirmLabel={name in PRESETS ? `Hide "${name}"?` : `Delete "${name}"?`}
+          title={name in PRESETS ? 'Hide this built-in layout (restore it from the layout menu)' : 'Delete this layout'}
+          onConfirm={remove}
+        />
         <select value="" onChange={(e) => e.target.value && addPanel(e.target.value)} title="Add a panel">
           <option value="">+ Panel</option>
           {[...views.values()].map((v) => (
