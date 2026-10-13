@@ -11,8 +11,6 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 - New-agent form picks a **project** instead of a free-text working directory. Agent cards show their project.
 - Hive tools `project_list` and `project_info`; `spawn_agent` takes `project` (teammates join the spawner's project by default); `agent_set_project` (Manage agents capability).
 - API: `/api/projects` (GET/POST/PATCH/DELETE), `POST /api/agents/:id/project`, `POST /api/fs/pick`, `GET /api/fs/inspect`.
-
-### Added
 - **Settings page** (⚙ in the top bar): choose which agents may run the floor: *Off*, *Orchestrator* or *All agents* per capability. Saved per floor in `settings.json`; enforced on every tool call.
 - **New hive tools** behind those settings: `agent_start` / `agent_stop` / `agent_interrupt` / `agent_hold` / `agent_archive`, `mod_list` / `mod_enable` / `mod_create`, and `ui_layout` / `ui_add_panel` (switch the layout or add a panel for everyone watching). Tell the Orchestrator "switch to the dashboard layout" or "build a mod that…" and it does it.
 - `GET` / `PUT /api/settings`.
