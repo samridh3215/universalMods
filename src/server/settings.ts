@@ -11,8 +11,8 @@ export const CAPABILITIES = {
   spawn: { label: 'Spawn agents', description: 'Create new teammates on the floor.', tools: ['spawn_agent'], default: 'all' },
   agents: {
     label: 'Manage agents',
-    description: 'Start, stop, interrupt, hold and archive other agents.',
-    tools: ['agent_start', 'agent_stop', 'agent_interrupt', 'agent_hold', 'agent_archive'],
+    description: 'Start, stop, interrupt, hold and archive other agents, and move them between projects.',
+    tools: ['agent_start', 'agent_stop', 'agent_interrupt', 'agent_hold', 'agent_archive', 'agent_set_project'],
     default: 'master',
   },
   mods: { label: 'Manage mods', description: 'List mods, turn them on or off, and build new ones from a sentence.', tools: ['mod_list', 'mod_enable', 'mod_create'], default: 'master' },

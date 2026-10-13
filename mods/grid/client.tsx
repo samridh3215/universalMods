@@ -27,6 +27,7 @@ function AgentCard({ a, collapsed, focused, onToggle, onFocus }: { a: AgentInfo;
         <strong>{a.name}</strong>
         {a.master && <span className="master-badge" title="Master orchestrator: always present, cannot be deleted">★ master</span>}
         <span className="muted small">{a.role}</span>
+        {a.project && <ProjectBadge id={a.project} />}
         <StatusBadge status={a.status} />
         {queued > 0 && <span className="small warn">{queued} queued</span>}
         <span className="spacer" />
@@ -218,3 +219,12 @@ function Grid(props: ViewProps) {
 }
 
 registerView({ id: 'grid', title: 'Agent grid', render: (p) => <Grid {...p} /> });
+
+function ProjectBadge({ id }: { id: string }) {
+  const p = useFloor((s) => s.projects.find((x) => x.id === id));
+  return p ? (
+    <span className="project-badge" title={`Project ${p.name}: ${p.workspace}`}>
+      📁 {p.name}
+    </span>
+  ) : null;
+}

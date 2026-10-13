@@ -9,6 +9,8 @@ import { handleHook } from './hookbridge.ts';
 import { createMod } from './mod-builder.ts';
 import { handleMcpTool, hiveTools } from './mcp-tools.ts';
 import { CAPABILITIES } from './settings.ts';
+import { inspectPath } from './projects.ts';
+import { pick } from './picker.ts';
 import type { WebAssets } from './web-build.ts';
 
 const VERSION: string = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
@@ -43,6 +45,7 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
       questions: f.questionList(),
       commands: [...f.commands].map(([name, c]) => ({ name, ...c })),
       settings: f.settings.get(),
+      projects: f.projects.list(),
       capabilities: CAPABILITIES,
     };
   });
@@ -70,6 +73,27 @@ export function createServer(getFloor: () => Floor, token: string, assets: WebAs
   route('POST', '/api/mod-builder', (_q, b) => createMod(F(), String(b.description ?? ''), b.target === 'project' ? 'project' : 'floor'));
   route('POST', '/api/mods/:id', (_q, b, [id]) => F().runtime.setEnabled(id, !!b.enabled));
   route('POST', '/api/mods/:id/press', (_q, b, [id]) => F().bus.emit('ui.press', { mod: id, key: String(b.key), payload: b.payload }, () => null, { only: id }));
+  const projectsChanged = () => F().o.broadcast({ type: 'projects', projects: F().projects.list() });
+  route('GET', '/api/projects', () => F().projects.list());
+  route('POST', '/api/projects', (_q, b) => {
+    const p = F().projects.create(b ?? {});
+    projectsChanged();
+    return p;
+  });
+  route('PATCH', '/api/projects/:id', (_q, b, [id]) => {
+    const p = F().projects.update(id, b ?? {});
+    projectsChanged();
+    return p;
+  });
+  route('DELETE', '/api/projects/:id', async (_q, _b, [id]) => {
+    const p = F().projects.must(id);
+    for (const a of F().list().filter((x) => x.project === p.id)) await F().setProject(a.id, null);
+    F().projects.remove(p.id);
+    projectsChanged();
+  });
+  route('POST', '/api/agents/:id/project', (_q, b, [id]) => F().setProject(id, b.project ? String(b.project) : null));
+  route('POST', '/api/fs/pick', (_q, b) => pick(b?.mode === 'files' ? 'files' : 'folder'));
+  route('GET', '/api/fs/inspect', (_q, _b, _p, url) => inspectPath(url.searchParams.get('path') ?? ''));
   route('GET', '/api/settings', () => ({ settings: F().settings.get(), capabilities: CAPABILITIES }));
   route('PUT', '/api/settings', (_q, b) => {
     const settings = F().settings.set(b);

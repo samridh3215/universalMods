@@ -27,6 +27,15 @@ export interface UiAction {
   by: string;
 }
 
+export interface ProjectRow {
+  id: string;
+  name: string;
+  workspace: string;
+  references: string[];
+  notes: string;
+  createdAt: number;
+}
+
 export interface FloorState {
   ready: boolean;
   /** Set when the server rejects our token (or we have none). */
@@ -49,6 +58,7 @@ export interface FloorState {
   toasts: { id: number; text: string; level: string; mod: string }[];
   queued: Record<string, number>;
   settings: { capabilities: Record<string, Scope> };
+  projects: ProjectRow[];
   capabilities: Record<string, CapabilityInfo>;
 }
 
@@ -94,6 +104,7 @@ let state: FloorState = {
   toasts: [],
   queued: {},
   settings: { capabilities: {} },
+  projects: [],
   capabilities: {},
 };
 const listeners = new Set<() => void>();
@@ -170,6 +181,7 @@ export async function refresh() {
     board: s.board,
     messages: s.messages,
     settings: s.settings ?? state.settings,
+    projects: s.projects ?? state.projects,
     capabilities: s.capabilities ?? state.capabilities,
     mods: s.mods,
     skills: s.skills,
@@ -214,6 +226,8 @@ function handle(m: any) {
       return set({ halted: m.halted });
     case 'settings':
       return set({ settings: m.settings });
+    case 'projects':
+      return set({ projects: m.projects });
     case 'ui':
       for (const l of uiListeners) l(m as UiAction);
       return;

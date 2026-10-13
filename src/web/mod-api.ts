@@ -139,6 +139,7 @@ export const floor = {
   start: (id: string) => api(`/api/agents/${enc(id)}/start`, 'POST', {}),
   hold: (id: string, held: boolean) => api(`/api/agents/${enc(id)}/hold`, 'POST', { held }),
   archive: (id: string) => api(`/api/agents/${enc(id)}/archive`, 'POST', {}),
+  setProject: (id: string, project: string | null) => api(`/api/agents/${enc(id)}/project`, 'POST', { project }),
   config: (id: string) => api(`/api/agents/${enc(id)}/config`),
   addTask: (t: Partial<Task> & { title: string }) => api('/api/tasks', 'POST', t),
   updateTask: (id: string, patch: Partial<Task>) => api(`/api/tasks/${enc(id)}`, 'PATCH', patch),

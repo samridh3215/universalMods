@@ -3,6 +3,7 @@
 import type { AgentInfo } from '../core/types.ts';
 import type { Floor } from './floor.ts';
 import { createMod } from './mod-builder.ts';
+import { inspectPath } from './projects.ts';
 
 const agentArg = { agent: { type: 'string', description: 'Agent name or id.' } };
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', properties, required });
@@ -15,6 +16,21 @@ export const FLOOR_TOOLS = [
     name: 'agent_hold',
     description: 'Hold an agent (queue its incoming messages) or release it.',
     inputSchema: obj({ ...agentArg, held: { type: 'boolean' } }, ['agent', 'held']),
+  },
+  {
+    name: 'agent_set_project',
+    description: 'Assign another agent to a project (or "none"). It moves to the project workspace and restarts if running.',
+    inputSchema: obj({ ...agentArg, project: { type: 'string' } }, ['agent', 'project']),
+  },
+  {
+    name: 'project_list',
+    description: "List the floor's projects: name, workspace folder, reference files and who is assigned.",
+    inputSchema: obj({}),
+  },
+  {
+    name: 'project_info',
+    description: 'Your project (or a named one): workspace, current reference files and folders, and notes.',
+    inputSchema: obj({ project: { type: 'string', description: 'Name or id; defaults to yours.' } }),
   },
   { name: 'agent_archive', description: 'Stop an agent and remove it from the floor. The master orchestrator cannot be archived.', inputSchema: obj(agentArg, ['agent']) },
   {
@@ -73,6 +89,26 @@ export async function handleFloorTool(floor: Floor, me: AgentInfo, tool: string,
       const t = other();
       await floor.archive(t.id);
       return { text: `archived ${t.name}` };
+    }
+    case 'agent_set_project': {
+      const t = other();
+      const pid = a.project === 'none' ? null : String(a.project);
+      await floor.setProject(t.id, pid);
+      return { text: pid ? `${t.name} is now on ${floor.projects.must(pid).name}` : `${t.name} has no project now` };
+    }
+    case 'project_list':
+      return {
+        text: JSON.stringify(
+          floor.projects.list().map((p) => ({ ...p, agents: floor.list().filter((x) => x.project === p.id).map((x) => x.name) })),
+          null,
+          2,
+        ),
+      };
+    case 'project_info': {
+      const p = floor.projects.get(a.project ?? me.project);
+      if (!p) return { text: a.project ? `no project "${a.project}"; use project_list` : 'You are not assigned to a project.' };
+      const refs = p.references.map(inspectPath);
+      return { text: JSON.stringify({ name: p.name, workspace: p.workspace, references: refs, notes: p.notes, agents: floor.list().filter((x) => x.project === p.id).map((x) => x.name) }, null, 2) };
     }
     case 'mod_list':
       return { text: JSON.stringify(floor.runtime.list(), null, 2) };

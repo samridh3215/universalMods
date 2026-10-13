@@ -12,10 +12,17 @@ export const HIVE_TOOLS = [
   },
   {
     name: 'spawn_agent',
-    description: 'Create a new agent on the floor. Optionally give it a first prompt.',
+    description: 'Create a new agent on the floor. Optionally give it a first prompt. It joins your project unless you name another (project_list).',
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string' }, role: { type: 'string' }, prompt: { type: 'string' }, model: { type: 'string' }, cwd: { type: 'string' } },
+      properties: {
+        name: { type: 'string' },
+        role: { type: 'string' },
+        prompt: { type: 'string' },
+        model: { type: 'string' },
+        project: { type: 'string', description: 'Project name or id; "none" for a private scratch folder.' },
+        cwd: { type: 'string', description: 'Only when there is no project.' },
+      },
       required: ['name'],
     },
   },
@@ -72,8 +79,11 @@ export async function handleMcpTool(floor: Floor, tool: string, agentId: string,
       return { text: r.delivered ? `delivered to ${a.to}` : `no agent named ${a.to}; use list_agents` };
     }
     case 'spawn_agent': {
-      const ag = await floor.spawn({ name: a.name, role: a.role, prompt: a.prompt, model: a.model, cwd: a.cwd ?? me.cwd }, me.name);
-      return { text: `spawned ${ag.name} (${ag.id})` };
+      // Teammates join the spawner's project by default; without one they share its folder as before.
+      const project = a.project === 'none' ? undefined : (a.project ?? me.project);
+      const ag = await floor.spawn({ name: a.name, role: a.role, prompt: a.prompt, model: a.model, project, cwd: project ? undefined : (a.cwd ?? me.cwd) }, me.name);
+      const p = floor.projects.get(ag.project);
+      return { text: `spawned ${ag.name} (${ag.id})${p ? ` on project ${p.name}` : ''}` };
     }
     case 'task_list':
       return json(floor.hive.tasks.filter((t) => !a.status || t.status === a.status));

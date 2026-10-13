@@ -16,6 +16,7 @@ import { PtyAgents } from './pty-agents.ts';
 import { Hive } from './hive.ts';
 import { instructionsFor } from './instructions.ts';
 import { Settings } from './settings.ts';
+import { ProjectStore } from './projects.ts';
 import { discoverSkills } from './skills.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -58,11 +59,13 @@ export class Floor {
   private sessions = new Map<string, ProviderSession>();
   readonly ptyAgents = new PtyAgents(this);
   readonly settings: Settings;
+  readonly projects: ProjectStore;
   private queues = new Map<string, { text: string; from: string }[]>();
 
   constructor(readonly o: FloorOptions) {
     this.hive = new Hive(o.dataDir);
     this.settings = new Settings(o.dataDir);
+    this.projects = new ProjectStore(o.dataDir);
     this.provider = getProvider(o.provider);
     this.kv = new KeyValueStore(path.join(o.dataDir, 'store'));
     this.bus = new Bus(
@@ -174,7 +177,9 @@ export class Floor {
       const id = `${base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'agent'}-${randomUUID().slice(0, 4)}`;
       const agentDir = this.hive.agentDir(id);
       fs.mkdirSync(agentDir, { recursive: true });
-      let cwd = spec.cwd ? path.resolve(spec.cwd.replace(/^~(?=\/|$)/, process.env.HOME ?? '~')) : path.join(agentDir, 'work');
+      const project = spec.project ? this.projects.must(spec.project) : undefined;
+      const dir = spec.cwd ?? project?.workspace;
+      let cwd = dir ? path.resolve(dir.replace(/^~(?=\/|$)/, process.env.HOME ?? '~')) : path.join(agentDir, 'work');
       fs.mkdirSync(cwd, { recursive: true });
       if (spec.worktree) cwd = this.makeWorktree(cwd, agentDir, id);
       const agent: AgentInfo = {
@@ -191,6 +196,7 @@ export class Floor {
         held: false,
         skills: spec.skills ?? [],
         ...(opts.master ? { master: true } : {}),
+        ...(project ? { project: project.id } : {}),
       };
       this.hive.agents.set(id, agent);
       this.hive.log('spawn', { id, by, spec });
@@ -221,7 +227,7 @@ export class Floor {
       agent,
       spec,
       agentDir: this.hive.agentDir(agent.id),
-      instructions: instructionsFor(agent, this.o.provider),
+      instructions: instructionsFor(agent, this.o.provider, this.projects.get(agent.project)),
       mcp: { command: process.execPath, args: [path.join(ROOT, 'bin/hive-mcp.mjs')], env: this.agentEnv(agent) },
       hookCommand: `"${process.execPath}" "${path.join(ROOT, 'bin/um-hook.mjs')}"`,
       skills,
@@ -265,7 +271,7 @@ export class Floor {
     };
     walk(config);
 
-    const instructions = instructionsFor(agent, this.o.provider);
+    const instructions = instructionsFor(agent, this.o.provider, this.projects.get(agent.project));
     if (config.thread && config.thread.developerInstructions !== instructions) {
       config.thread.developerInstructions = instructions;
       changed = true;
@@ -434,6 +440,21 @@ export class Floor {
     if (a.status !== 'working') this.setStatus(a, held ? 'held' : this.sessions.has(a.id) ? 'idle' : 'stopped');
     this.touch(a);
     if (!held) void this.drain(a.id);
+  }
+
+  /** Assign an agent to a project (or none). It moves to the project's workspace and restarts if running. */
+  async setProject(id: string, projectId: string | null) {
+    const a = this.must(id);
+    const p = projectId ? this.projects.must(projectId) : undefined;
+    const ownWorktree = a.cwd === path.join(this.hive.agentDir(a.id), 'worktree');
+    a.project = p?.id;
+    if (!ownWorktree) a.cwd = p?.workspace ?? path.join(this.hive.agentDir(a.id), 'work');
+    fs.mkdirSync(a.cwd, { recursive: true });
+    this.hive.log('project', { id: a.id, project: a.project });
+    this.touch(a);
+    // Instructions (with the project brief) are rebuilt on every start.
+    if (this.sessions.has(a.id)) await this.kill(a.id).then(() => this.start(a.id));
+    return a;
   }
 
   async archive(id: string) {

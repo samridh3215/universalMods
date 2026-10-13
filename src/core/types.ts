@@ -30,6 +30,8 @@ export interface AgentInfo {
   archived?: boolean;
   /** The floor's master orchestrator: always present, cannot be archived. */
   master?: boolean;
+  /** Id of the project this agent is assigned to. */
+  project?: string;
 }
 
 export interface SpawnSpec {
@@ -38,6 +40,8 @@ export interface SpawnSpec {
   model?: string;
   effort?: string;
   cwd?: string;
+  /** Project id or name: the agent works in its workspace and gets its references. */
+  project?: string;
   worktree?: boolean;
   skills?: string[];
   prompt?: string;

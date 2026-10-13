@@ -4,6 +4,7 @@ import { Component, useEffect, useRef, useState, useSyncExternalStore, type Reac
 import { _internal, floor, useFloor, type ViewDef } from './mod-api.ts';
 import { api, onUi, refresh, setToken, toast } from './store.ts';
 import { SettingsButton } from './settings.tsx';
+import { ProjectsButton } from './projects.tsx';
 import { ModsPanel, builtinViews } from './builtin-views.tsx';
 import { Markdown } from './markdown.tsx';
 import { fromViews, normalize, Workspace, type Layout } from './layout.tsx';
@@ -378,6 +379,7 @@ function Shell() {
           </span>
         ))}
         {!s.check?.ok && <span className="bad">{s.check?.error}</span>}
+        <ProjectsButton />
         <SettingsButton />
         <ModsButton />
         <button className={s.halted ? 'danger' : 'danger-outline'} onClick={() => floor.halt(!s.halted)}>

@@ -37,7 +37,7 @@ Every call needs the header `x-um-token: <token>` (base URL `http://127.0.0.1:44
 | Action | Request |
 |---|---|
 | Floor state (agents, tasks, board, mods) | `GET /api/state` |
-| Spawn an agent | `POST /api/agents` `{name, role?, model?, cwd?, worktree?, prompt?}` |
+| Spawn an agent | `POST /api/agents` `{name, role?, model?, project?, worktree?, prompt?}` |
 | Send / steer / interrupt | `POST /api/agents/:id/send` `{text}` · `/steer` `{text}` · `/interrupt` |
 | Start / stop an agent's terminal | `POST /api/agents/:id/start` · `/kill` |
 | Agent events / terminal buffer | `GET /api/agents/:id/events` · `GET /api/agents/:id/pty` |
@@ -46,6 +46,7 @@ Every call needs the header `x-um-token: <token>` (base URL `http://127.0.0.1:44
 | Message an agent | `POST /api/messages` `{to, text}` |
 | Halt / resume everything | `POST /api/floor/halt` `{on: true\|false}` |
 | Build a mod from a sentence | `POST /api/mod-builder` `{description, target: "floor"\|"project"}` |
+| Projects | `GET/POST /api/projects` `{name, workspace, references?, notes?}` · `PATCH/DELETE /api/projects/:id` · assign: `POST /api/agents/:id/project` `{project}` |
 | Agent permissions | `GET /api/settings` · `PUT /api/settings` `{capabilities: {spawn\|agents\|mods\|ui: "off"\|"master"\|"all"}}` |
 
 Prefer messaging the **Orchestrator** (the agent with `master: true`) and letting it delegate.
