@@ -156,6 +156,6 @@ export const floor = {
 };
 
 export { React, toast };
-export { EventLine, StatusBadge, fmtUsage } from './components.tsx';
+export { ConfirmButton, EventLine, StatusBadge, fmtUsage } from './components.tsx';
 export { AgentTerminal } from './terminal.tsx';
 export { Markdown } from './markdown.tsx';

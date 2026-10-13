@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { floor, registerView, useFloor, useModChannel, type ViewProps } from 'universal-mods';
+import { ConfirmButton, floor, registerView, useFloor, useModChannel, type ViewProps } from 'universal-mods';
 import { Flow } from './flow.tsx';
 import { injectStyles } from './styles.ts';
 
@@ -101,9 +101,7 @@ function Card({ it, onChange, fresh }: { it: Item; onChange: (s: State) => void;
               ))}
             </select>
             <span className="spacer" />
-            <button className="danger-outline" onClick={() => confirm(`Remove ${it.id}?`) && press('remove', { id: it.id }).then(onChange)}>
-              ×
-            </button>
+            <ConfirmButton className="danger-outline" label="×" confirmLabel={`Remove ${it.id}?`} title="Remove this item" onConfirm={() => press('remove', { id: it.id }).then(onChange)} />
           </div>
         </div>
       )}

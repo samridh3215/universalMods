@@ -7,6 +7,7 @@ import { SettingsButton } from './settings.tsx';
 import { ModsPanel, builtinViews } from './builtin-views.tsx';
 import { Markdown } from './markdown.tsx';
 import { fromViews, normalize, Workspace, type Layout } from './layout.tsx';
+import { ConfirmButton } from './components.tsx';
 
 // Built-in layouts. Users rearrange them freely; changes are saved per layout name.
 const PRESETS: Record<string, Layout> = {
@@ -278,8 +279,7 @@ function Shell() {
   const visible = Object.keys(layouts).filter((k) => k === name || !hidden.includes(k));
   const remove = () => {
     const rest = visible.filter((k) => k !== name);
-    if (!rest.length) return alert('Keep at least one layout.');
-    if (!confirm(name in PRESETS ? `Hide the built-in layout "${name}"? You can restore built-ins from the layout menu.` : `Delete layout "${name}"?`)) return;
+    if (!rest.length) return toast('Keep at least one layout.', 'warn');
     const all = { ...layouts };
     if (name in PRESETS) {
       all[name] = PRESETS[name]; // drop any customisation too
@@ -320,9 +320,13 @@ function Shell() {
         >
           Save as…
         </button>
-        <button className="layout-delete" onClick={remove} title={name in PRESETS ? 'Hide this built-in layout' : 'Delete this layout'} aria-label="Delete layout">
-          Delete
-        </button>
+        <ConfirmButton
+          className="layout-delete"
+          label="Delete"
+          confirmLabel={name in PRESETS ? `Hide "${name}"?` : `Delete "${name}"?`}
+          title={name in PRESETS ? 'Hide this built-in layout (restore it from the layout menu)' : 'Delete this layout'}
+          onConfirm={remove}
+        />
         <select value="" onChange={(e) => e.target.value && addPanel(e.target.value)} title="Add a panel">
           <option value="">+ Panel</option>
           {[...views.values()].map((v) => (
