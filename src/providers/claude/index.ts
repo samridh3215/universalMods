@@ -1,6 +1,7 @@
 // Claude Code provider: one long-lived `claude -p` stream-json process per agent.
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import type { TurnError } from '../pty.ts';
 import type { Provider, ProviderSession, StartContext } from '../types.ts';
 import { lineReader, versionOf, which } from '../util.ts';
 import { buildClaudeConfig, claudeArgs, writeClaudeConfig } from './config.ts';
@@ -9,6 +10,14 @@ import { newClaudeState, normalizeClaude } from './normalize.ts';
 const BIN = process.env.UM_CLAUDE_BIN ?? 'claude';
 
 const userMsg = (text: string) => JSON.stringify({ type: 'user', message: { role: 'user', content: [{ type: 'text', text }] } }) + '\n';
+
+/** Claude TUI lines that end a turn without a Stop hook (matched with whitespace stripped). */
+export const CLAUDE_TURN_ERRORS: TurnError[] = [
+  { pattern: /Pleaserun\/login|Loginexpired|OAuthtokenhasexpired|InvalidAPIkey/i, message: 'Claude is not logged in (login expired). Run /login in its terminal, then send again.' },
+  { pattern: /(hit|reached)your(usage)?limit|usagelimitreached|limitreached.{0,3}resets/i, message: 'Claude usage limit reached.' },
+  { pattern: /Creditbalanceistoolow/i, message: 'Claude credit balance is too low.' },
+  { pattern: /APIError[:(]/, message: 'Claude API error (see its terminal).' },
+];
 
 export const claudeProvider: Provider = {
   id: 'claude',
@@ -29,6 +38,7 @@ export const claudeProvider: Provider = {
       args: claudeArgs(ctx.agentDir, ctx.config, { id: ctx.resume ?? randomUUID(), resume }, true),
       // New folders get a "Do you trust this folder?" prompt even in bypass mode; choose "Yes".
       autoAnswers: [{ pattern: /Yes,Itrustthisfolder/, keys: ['\x1b[B', '\r'], delayMs: 2000 }],
+      turnErrors: CLAUDE_TURN_ERRORS,
     };
   },
 

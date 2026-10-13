@@ -289,7 +289,12 @@ export class Floor {
     if (ev.kind === 'text' && !ev.delta) agent.lastActivity = ev.text.slice(0, 120);
     if (ev.kind === 'turn') {
       if (ev.phase === 'start') this.setStatus(agent, 'working');
-      else {
+      else if (ev.phase === 'fail' && this.mode === 'pty') {
+        // The CLI hit an error it can't get past (login expired, usage limit …). Keep the queue
+        // instead of feeding it into the same error; the next send or start retries.
+        agent.turns += 1;
+        this.setStatus(agent, 'error');
+      } else {
         agent.turns += 1;
         this.setStatus(agent, agent.held ? 'held' : 'idle');
         setImmediate(() => this.drain(agent.id));
@@ -349,9 +354,8 @@ export class Floor {
 
   async interrupt(id: string) {
     const a = this.must(id);
+    // In pty mode the session also closes the turn itself if no hook confirms the interrupt.
     await this.sessions.get(a.id)?.interrupt();
-    // Claude's TUI fires no hook when interrupted, so close the turn ourselves.
-    if (this.mode === 'pty') setTimeout(() => a.status === 'working' && this.onEvent(a, { kind: 'turn', phase: 'abort', error: 'interrupted' }), 2500);
   }
 
   async kill(id: string) {

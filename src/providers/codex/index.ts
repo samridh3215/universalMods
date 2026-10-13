@@ -1,5 +1,6 @@
 // Codex provider: one `codex app-server` (JSON-RPC over stdio) per agent, one thread each.
 import { spawn, type ChildProcess } from 'node:child_process';
+import type { TurnError } from '../pty.ts';
 import type { Provider, ProviderSession, StartContext } from '../types.ts';
 import { lineReader, toToml, versionOf, which } from '../util.ts';
 import { buildCodexConfig, writeCodexConfig } from './config.ts';
@@ -59,6 +60,13 @@ class RpcClient {
 
 const textInput = (text: string) => [{ type: 'text', text, text_elements: [] }];
 
+/** Codex TUI lines that end a turn without a Stop hook (matched with whitespace stripped). */
+export const CODEX_TURN_ERRORS: TurnError[] = [
+  { pattern: /signinagain|Notloggedin|unexpectedstatus401/i, message: 'Codex is not logged in (run `codex login`), then send again.' },
+  { pattern: /(hit|reached)your(usage)?limit|(usage|rate)limit(reached|exceeded)/i, message: 'Codex usage limit reached.' },
+  { pattern: /■(streamerror|unexpectedstatus|error)/i, message: 'Codex API error (see its terminal).' },
+];
+
 export const codexProvider: Provider = {
   id: 'codex',
 
@@ -83,7 +91,7 @@ export const codexProvider: Provider = {
     if (c.turn?.effort) args.push('-c', `model_reasoning_effort=${toToml(c.turn.effort)}`);
     args.push(...(c.extraArgs ?? []));
     if (ctx.resume) args.push('resume', ctx.resume);
-    return { bin: BIN, args };
+    return { bin: BIN, args, turnErrors: CODEX_TURN_ERRORS };
   },
 
   async start(ctx: StartContext): Promise<ProviderSession> {

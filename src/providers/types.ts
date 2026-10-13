@@ -1,4 +1,4 @@
-import type { AutoAnswer } from './pty.ts';
+import type { AutoAnswer, TurnError } from './pty.ts';
 import type { AgentEvent, AgentInfo, ProviderId, SpawnSpec, ToolDecision } from '../core/types.ts';
 
 /** Everything a provider's config adapter needs to produce a per-agent config. */
@@ -49,5 +49,5 @@ export interface Provider {
   writeConfig(input: ConfigInput, config: Record<string, any>): string[];
   start(ctx: StartContext): Promise<ProviderSession>;
   /** Interactive TUI command for live-terminal mode (status then comes from hooks). */
-  ptyCommand(ctx: StartContext): { bin: string; args: string[]; autoAnswers?: AutoAnswer[] };
+  ptyCommand(ctx: StartContext): { bin: string; args: string[]; autoAnswers?: AutoAnswer[]; turnErrors?: TurnError[] };
 }
