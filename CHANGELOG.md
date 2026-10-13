@@ -6,6 +6,8 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-13
+
 ### Added
 - **Projects** (📁 in the top bar): a workspace folder plus reference files/folders and notes. Pick folders and files with the system dialog (macOS, Windows, Linux with zenity) or type a path. Assign agents to a project: they work in its workspace (optionally in their own git worktree) and their instructions list the references to read.
 - New-agent form picks a **project** instead of a free-text working directory. Agent cards show their project.
@@ -76,7 +78,8 @@ Cut a release with `npm run release -- <patch|minor|major>`; pushing the tag pub
 - Hive: shared kanban, plan board, agent-to-agent messages, `spawn_agent` and `ask_user` over a stdio MCP server.
 - Hook bridge for `PreToolUse` guards; built-in grid, timeline, kanban/board, status and guard-example mods.
 
-[Unreleased]: https://github.com/samridh3215/universalMods/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/samridh3215/universalMods/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/samridh3215/universalMods/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/samridh3215/universalMods/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/samridh3215/universalMods/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/samridh3215/universalMods/compare/v0.1.0...v0.2.0

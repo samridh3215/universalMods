@@ -7,7 +7,7 @@
       "name": "universalmods",
       "source": "./",
       "description": "Skill to install, run and drive a universalMods floor and to write universalMods mods.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "license": "MIT",
       "homepage": "https://samridh3215.github.io/universalMods/",
       "repository": "https://github.com/samridh3215/universalMods",
