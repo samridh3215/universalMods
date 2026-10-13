@@ -246,14 +246,24 @@ export class Floor {
   private async startSession(agent: AgentInfo) {
     const { config } = this.agentConfig(agent.id);
     const pty = this.mode === 'pty';
+    const env = this.agentEnv(agent);
+    // A CLI can only resume a session that has had at least one turn.
+    let resume = pty && agent.turns === 0 ? undefined : agent.sessionId;
+    // ... and that it still has on disk (deleted, never persisted, or a floor copied from
+    // another machine). Resuming it anyway fails on every start, so start fresh instead.
+    if (resume && this.provider.hasSession?.(resume, env) === false) {
+      this.onEvent(agent, { kind: 'notice', text: `session ${resume} is no longer saved by the CLI; starting a new session` });
+      agent.sessionId = undefined;
+      this.hive.saveAgents();
+      resume = undefined;
+    }
     try {
       const ctx = {
         agent,
         agentDir: this.hive.agentDir(agent.id),
         config,
-        env: this.agentEnv(agent),
-        // A CLI can only resume a session that has had at least one turn.
-        resume: pty && agent.turns === 0 ? undefined : agent.sessionId,
+        env,
+        resume,
         emit: (ev: AgentEvent) => this.onEvent(agent, ev),
         approve: (tool: string, input: unknown) => this.approve(agent.id, tool, input, 'approval'),
         onExit: (code: number | null) => {

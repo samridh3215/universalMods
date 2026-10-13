@@ -100,3 +100,28 @@ describe('config adapters', () => {
     expect(fs.readFileSync(path.join(input.agentDir, 'codex/config.toml'), 'utf8')).toContain('mcp_servers.hive = {');
   });
 });
+
+describe('hasSession (resume only what the CLI still has)', () => {
+  const id = '01a12181-e515-7472-89b1-30f6606761e8';
+
+  it('Codex: finds rollouts under $CODEX_HOME/sessions or archived_sessions; unknown without a store', async () => {
+    const { codexProvider } = await import('../src/providers/codex/index.ts');
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'um-codex-'));
+    expect(codexProvider.hasSession!(id, { CODEX_HOME: home })).toBeUndefined();
+    const day = path.join(home, 'sessions', '2026', '10', '09');
+    fs.mkdirSync(day, { recursive: true });
+    expect(codexProvider.hasSession!(id, { CODEX_HOME: home })).toBe(false);
+    fs.writeFileSync(path.join(day, `rollout-2026-10-09T22-02-03-${id}.jsonl`), '{}\n');
+    expect(codexProvider.hasSession!(id, { CODEX_HOME: home })).toBe(true);
+    expect(codexProvider.hasSession!('11111111-2222-3333-4444-555555555555', { CODEX_HOME: home })).toBe(false);
+  });
+
+  it('Claude: finds <id>.jsonl under $CLAUDE_CONFIG_DIR/projects/*', async () => {
+    const { claudeProvider } = await import('../src/providers/claude/index.ts');
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'um-claude-'));
+    fs.mkdirSync(path.join(home, 'projects', '-tmp-work'), { recursive: true });
+    expect(claudeProvider.hasSession!(id, { CLAUDE_CONFIG_DIR: home })).toBe(false);
+    fs.writeFileSync(path.join(home, 'projects', '-tmp-work', `${id}.jsonl`), '{}\n');
+    expect(claudeProvider.hasSession!(id, { CLAUDE_CONFIG_DIR: home })).toBe(true);
+  });
+});
